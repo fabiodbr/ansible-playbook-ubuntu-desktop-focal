@@ -8,7 +8,7 @@ install: ansible-requirements ## Executa o playbook completo. Para especificar a
 	
 ansible-requirements: ## Download ansible roles dependencies
 	@echo Downloading requirements...
-	ansible-galaxy install --force --role-file requirements.yml --roles-path roles/
+	ansible-galaxy install --role-file roles/requirements.yml --roles-path roles/ --force 
 
 setup: ## Instala python3 e ansible
 	@sudo apt install -y python3-pip
