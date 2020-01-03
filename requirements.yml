@@ -1,0 +1,7 @@
+---
+- name: ansible-role-visual-studio-code-extensions 
+  scm: git
+  src: git+https://github.com/gantsign/ansible-role-visual-studio-code-extensions
+  version: master
+  depth: 1
+

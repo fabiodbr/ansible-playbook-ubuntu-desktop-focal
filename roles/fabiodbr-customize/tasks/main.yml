@@ -1,0 +1,77 @@
+---
+- name: "sudoers: Don't prompt for password"
+  lineinfile:
+     path: /etc/sudoers
+     line: "{{ user }} ALL=(ALL) NOPASSWD:ALL"
+     insertafter: EOF
+     validate: '/usr/sbin/visudo -cf %s'
+
+- name: Terminator with Nord theme
+  block:
+    - git:
+        repo: https://github.com/arcticicestudio/nord-terminator.git
+        dest: /tmp/nord
+        depth: 1
+    - file:
+        path: '/home/{{ user }}/.config/terminator'
+        state: directory
+        owner: '{{ user }}'
+        group: '{{ user }}'
+        mode: 0755
+    - copy:
+        src: '/tmp/nord/src/config'
+        dest: '/home/{{ user }}/.config/terminator/config'
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: 0644
+    - replace:
+        dest: '/home/{{ user }}/.config/terminator/config'
+        regexp: 'nord'
+        replace: 'default'
+    - lineinfile:
+        dest: '/home/{{ user }}/.config/terminator/config'
+        regexp: '^background_color'
+        insertafter: '^background_color'
+        line: "    {{ item.property }} = {{ item.value }}"
+      with_items: 
+        - { property: 'background_darkness', value: '0.9' }
+        - { property: 'background_type',     value: 'transparent' }
+        - { property: 'scrollback_lines',    value: '50000' }
+        - { property: 'font',                value: 'Liberation Mono 8' }
+        - { property: 'use_system_font',     value: 'False' }
+
+- name: "Create themes directory"
+  file:
+    path: '/home/{{ user }}/.themes'
+    state: directory
+    owner: '{{ user }}'
+    group: '{{ user }}'
+    mode: 0755
+
+- name: "MacOS Themes"
+  git:
+    repo:  https://github.com/paullinuxthemer/Mc-OS-themes
+    dest: "/home/{{ user }}/.themes"
+    depth: 1
+  become_user: "{{ user }}"
+
+- name: Instala extensoes do VSCode
+  tags: programming, vscode
+  block:
+  - name: "VSCode Extensions"
+    ignore_errors: yes
+    include_role:
+      name: ansible-role-visual-studio-code-extensions 
+    vars:
+      visual_studio_code_extensions_build: stable
+      users:
+        - username: "{{ user }}"
+          visual_studio_code_extensions:
+            - timonwong.ansible-autocomplete 
+            - dbaeumer.vscode-eslint
+            - mauve.terraform
+            - 4ops.terraform
+            - donjayamanne.githistory
+          visual_studio_code_extensions_absent:
+            - seanmcbreen.Spell
+    

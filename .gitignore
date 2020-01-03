@@ -1,0 +1,2 @@
+*.retry
+roles/ansible-role-visual-studio-code-extensions
