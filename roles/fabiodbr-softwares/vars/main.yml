@@ -1,5 +1,6 @@
 ---
 # vars file for fabiodbr-gnome-env
 user: "{{ lookup('env','USER') }}"
-visual_studio_code_binary: "/home/{{ user|quote }}/.local/share/umake/bin/code"
-visual_studio_code_path: "/home/{{ user|quote }}/.local/share/umake/ide/visual-studio-code"
+vscode_installation: "/home/{{ user|quote }}/.local/share/umake/ide/visual-studio-code"
+vscode_bin: "/home/{{ user|quote }}/.local/share/umake/ide/visual-studio-code/bin/code"
+vscode_symlink: "/home/{{ user|quote }}/.local/share/umake/bin/code"

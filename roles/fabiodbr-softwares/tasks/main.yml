@@ -32,6 +32,18 @@
     - ppa:daniruiz/flat-remix
   ignore_errors: yes
 
+- name: R
+  block:
+    - apt_repository:
+        repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
+        validate_certs: no
+      tags: R
+    - apt_key:
+        keyserver: "keyserver.ubuntu.com"
+        id: "E298A3A825C0D65DFD57CBB651716619E084DAB9"
+        state: present
+      tags: R
+
 - name: Trusty PPAs
   apt_repository:
     repo: "{{ item }}"
@@ -86,11 +98,13 @@
     - network-manager-openvpn-gnome
     - deluge
     - htop
-    - docker-ce
     - asciinema
     - httpie
     - expect
     - ubuntu-restricted-extras
+    - gettext
+    - r-base
+
   ignore_errors: yes
 
 - name: Install Keybase
@@ -109,11 +123,17 @@
     name: http-prompt
     state: latest
 
-- name: "Add {{ user }} to docker group"
-  user:
-    name: "{{ user }}"
-    groups: "docker"
-    append: yes
+- name: Configure docker for non-root user
+  block:
+    - group:
+        name: docker
+        state: present
+
+    - name: "Add {{ user }} to docker group"
+      user:
+        name: "{{ user }}"
+        groups: "docker"
+        append: yes
 
 - name: Habilita powerline-shell
   blockinfile:
@@ -129,27 +149,17 @@
 
 - name: Instala VSCode
   block:
-    - name: "Verifica se VSCode já está instalado"
-      tags: dev, vscode, visual-studio-code
-      stat:
-        path: "{{ visual_studio_code_path }}/code"
-      register: vscode_installed
-    - name: "Cria symlink para 'code'"
-      tags: dev, vscode, visual-studio-code
-      file:
-        src: "{{ visual_studio_code_binary }}" 
-        dest: "{{ visual_studio_code_path }}/code"
-        owner: "{{ user }}"
-        group: "{{ user }}"
-        state: link
-      when: vscode_installed.stat.exists == false
-    - name: Instala VsCode
+    - name: "Instala VsCode"
       tags: dev, vscode, visual-studio-code
       become_user: "{{ user }}"
-      shell: "yes | umake ide visual-studio-code --accept-license {{ visual_studio_code_path }}"
-      when: vscode_installed.stat.exists == false
+      shell: "yes | umake ide visual-studio-code --accept-license {{ vscode_installation  }}"
+    - name: "Cria atalho 'code'"
+      file:
+        src: "{{ vscode_bin }}" 
+        dest: "{{ vscode_symlink }}"
+        state: link
 
-- name: Instala fonte Menlo monospace
+- name: Instala fonte Menlo monospace para o VScode
   block:
     - name: Clona repositorio
       git:
