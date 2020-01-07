@@ -13,7 +13,6 @@
     channel: latest/edge
   loop:
     - docker
-    - vlc
 
 - name: "Adding Google Chrome stable repository"
   lineinfile:
@@ -34,14 +33,14 @@
 
 - name: R
   block:
-    - apt_repository:
-        repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
-        validate_certs: no
-      tags: R
     - apt_key:
         keyserver: "keyserver.ubuntu.com"
         id: "E298A3A825C0D65DFD57CBB651716619E084DAB9"
         state: present
+      tags: R
+    - apt_repository:
+        repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
+        validate_certs: no
       tags: R
 
 - name: Trusty PPAs
@@ -104,14 +103,9 @@
     - ubuntu-restricted-extras
     - gettext
     - r-base
+    - vlc
 
   ignore_errors: yes
-
-- name: Install Keybase
-  apt:
-    deb: "{{ item }}"
-  with_items:
-    - https://prerelease.keybase.io/keybase_amd64.deb
 
 - name: Install powerline-shell
   pip:
