@@ -1,0 +1,213 @@
+---
+- name: Add PPAs
+  apt_repository:
+    repo: '{{ item }}'
+    validate_certs: no
+  loop:
+    - ppa:noobslab/icons
+    - ppa:otto-kesselgulasch/gimp
+    - ppa:graphics-drivers/ppa
+    - ppa:daniruiz/flat-remix
+  ignore_errors: yes
+
+- name: Trusty PPAs
+  apt_repository:
+    repo: "{{ item }}"
+    validate_certs: no
+    codename: trusty
+  loop:
+    - ppa:noobslab/themes
+
+- name: apt upgrade
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: packages facts
+  package_facts:
+    manager: auto
+
+- name: install essential packages
+  apt:
+    dpkg_options: 'force-confold,force-confdef'
+    autoremove: yes
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - python3
+    - python3-pip
+    - vim
+    - git
+    - lm-sensors
+    - curl
+    - apt-transport-https
+    - ca-certificates
+    - software-properties-common
+    - ubuntu-make
+    - gimp
+    - deluge
+    - htop
+    - asciinema
+    - httpie
+    - expect
+    - ubuntu-restricted-extras
+    - gettext
+    - r-base
+    - vlc
+  ignore_errors: yes
+
+- name: Install gnome stuff
+  apt:
+    name: "{{ item }}"
+    state: latest
+    dpkg_options: 'force-confdef,force-confold'
+  loop:
+    - chrome-gnome-shell
+    - flat-remix
+    - flat-remix-gnome
+    - flat-remix-gtk
+    - gnome-tweak-tool
+    - gnome-shell-extensions
+    - gnome-themes-standard
+    - gnome-shell-extensions
+    - gnome-shell-extension-weather
+
+- name: Google Chrome
+  block:
+    - name: "chrome apt-keys"
+      apt_key:
+        url: "https://dl-ssl.google.com/linux/linux_signing_key.pub"
+        state: present
+    - name: "chrome repository"
+      apt_repository:
+        repo: "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main"
+    - name: "install google chrome"
+      apt:
+        name: google-chrome-stable
+        state: latest
+  tags: chrome
+
+- name: Docker Community Edition
+  block:
+    - name: "docker-ce: remove snap if present"
+      snap:
+        name: docker
+        state: absent
+    - name: "docker-ce: essential packages"
+      apt:
+        name: "{{ item }}"
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+    - name: "docker-ce: apt-keys"
+      apt_key:
+        url: "https://download.docker.com/linux/ubuntu/gpg"
+        state: present
+    - name: "docker-ce: repository"
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu disco stable"
+        state: present
+    - name: "docker-ce: install"
+      apt:
+        name: docker-ce
+        state: present
+    - name: ensure docker group is present
+      group:
+        name: docker
+        state: present
+    - name: "Add {{ user }} to docker group"
+      user:
+        name: "{{ user }}"
+        groups: "docker"
+        append: yes
+
+- name: R
+  block:
+    - apt_key:
+        keyserver: "keyserver.ubuntu.com"
+        id: "E298A3A825C0D65DFD57CBB651716619E084DAB9"
+        state: present
+    - apt_repository:
+        repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
+        validate_certs: no
+  tags: programming, R
+
+- name: R Studio {{ rstudio_version }}
+  apt:
+    deb: "https://download1.rstudio.org/desktop/bionic/amd64/rstudio-{{ rstudio_version }}-amd64.deb"
+    state: present
+  when: "ansible_facts.packages['rstudio'][0].version != rstudio_version"
+  ignore_errors: yes
+  tags: programming, ide, rstudio
+
+- name: Remove unity look
+  apt:
+    state: absent
+    name: gnome-shell-extension-ubuntu-dock
+
+- name: Terminator
+  block:
+    - name: "Terminator: ppa repository"
+      apt_repository:
+        repo: "ppa:gnome-terminator/nightly-gtk3"
+        validate_certs: no
+        codename: trusty
+    - name: "Terminator: install"
+      apt:
+        name: terminator
+        state: latest
+
+- name: Powerline-Shell
+  block:
+    - name: Install powerline-shell
+      pip:
+        name: powerline-shell
+        state: latest
+    - name: install powerline fonts
+      apt:
+        name: "fonts-powerline"
+        state: latest
+    - name: Enable powerline-shell
+      blockinfile:
+        path: /etc/bash.bashrc
+        insertafter: EOF
+        content: |
+          function _update_ps1() {
+            PS1=$(powerline-shell $?)
+          }
+          if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
+            PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
+          fi
+
+- name: VSCode
+  block:
+    - name: "VSCode: Install"
+      tags: dev, vscode, visual-studio-code
+      become_user: "{{ user }}"
+      shell: "yes | umake ide visual-studio-code --accept-license {{ vscode_installation  }}"
+    - name: "VSCode: symlink for 'code'"
+      file:
+        src: "{{ vscode_bin }}"
+        dest: "{{ vscode_symlink }}"
+        state: link
+  tags: programming, vscode, ide
+
+- name: Menlo monospace for VScode
+  block:
+    - name: Clones repository
+      git:
+        repo: https://github.com/abertsch/Menlo-for-Powerline.git
+        dest: /tmp/menlo
+        depth: 1
+    - name: Copy font
+      copy:
+        src: "/tmp/menlo/Menlo for Powerline.ttf"
+        dest: /usr/share/fonts
+    - name: Update font cache
+      shell:
+        cmd: fc-cache -f -v
+  ignore_errors: yes
+  tags: fonts

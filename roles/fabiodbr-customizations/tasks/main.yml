@@ -8,37 +8,43 @@
 
 - name: Terminator with Nord theme
   block:
-    - git:
-        repo: https://github.com/arcticicestudio/nord-terminator.git
-        dest: /tmp/nord
-        depth: 1
     - file:
         path: '/home/{{ user }}/.config/terminator'
         state: directory
         owner: '{{ user }}'
         group: '{{ user }}'
         mode: 0755
-    - copy:
-        src: '/tmp/nord/src/config'
-        dest: '/home/{{ user }}/.config/terminator/config'
-        owner: "{{ user }}"
-        group: "{{ user }}"
-        mode: 0644
-    - replace:
-        dest: '/home/{{ user }}/.config/terminator/config'
-        regexp: 'nord'
-        replace: 'default'
-    - lineinfile:
-        dest: '/home/{{ user }}/.config/terminator/config'
-        regexp: '^background_color'
-        insertafter: '^background_color'
-        line: "    {{ item.property }} = {{ item.value }}"
-      with_items: 
-        - { property: 'background_darkness', value: '0.9' }
-        - { property: 'background_type',     value: 'transparent' }
-        - { property: 'scrollback_lines',    value: '50000' }
-        - { property: 'font',                value: 'Liberation Mono 8' }
-        - { property: 'use_system_font',     value: 'False' }
+    - stat:
+        path: "/home/{{ user }}/.config/terminator/config"
+      register: ansible_config
+    - block:
+      - git:
+          repo: https://github.com/arcticicestudio/nord-terminator.git
+          dest: /tmp/nord
+          depth: 1
+      - copy:
+          src: '/tmp/nord/src/config'
+          dest: '/home/{{ user }}/.config/terminator/config'
+          owner: "{{ user }}"
+          group: "{{ user }}"
+          mode: 0644
+      - replace:
+          dest: '/home/{{ user }}/.config/terminator/config'
+          regexp: 'nord'
+          replace: 'default'
+      - lineinfile:
+          dest: '/home/{{ user }}/.config/terminator/config'
+          regexp: '^background_color'
+          insertafter: '^background_color'
+          line: "    {{ item.property }} = {{ item.value }}"
+        with_items: 
+          - { property: 'background_darkness', value: '0.9' }
+          - { property: 'background_type',     value: 'transparent' }
+          - { property: 'scrollback_lines',    value: '50000' }
+          - { property: 'font',                value: 'Liberation Mono 8' }
+          - { property: 'use_system_font',     value: 'False' }
+      when: ansible_config.stat.exists == False
+
 
 - name: "Create themes directory"
   file:

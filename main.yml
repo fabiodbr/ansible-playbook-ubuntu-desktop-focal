@@ -3,4 +3,4 @@
   name: Welcome Fabio.
   roles:
     - { role: fabiodbr-softwares, become: yes }
-    - { role: fabiodbr-customize, become: yes }
+    - { role: fabiodbr-customizations, become: yes }
