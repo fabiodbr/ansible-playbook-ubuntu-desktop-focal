@@ -4,19 +4,9 @@
     repo: '{{ item }}'
     validate_certs: no
   loop:
-    - ppa:noobslab/icons
     - ppa:otto-kesselgulasch/gimp
     - ppa:graphics-drivers/ppa
-    - ppa:daniruiz/flat-remix
   ignore_errors: yes
-
-- name: Trusty PPAs
-  apt_repository:
-    repo: "{{ item }}"
-    validate_certs: no
-    codename: trusty
-  loop:
-    - ppa:noobslab/themes
 
 - name: apt upgrade
   apt:
@@ -44,6 +34,7 @@
     - ca-certificates
     - software-properties-common
     - ubuntu-make
+    - tilix
     - gimp
     - deluge
     - htop
@@ -54,20 +45,15 @@
     - gettext
     - r-base
     - vlc
-    - libssl-dev
-    - libcurl4-openssl-dev
   ignore_errors: yes
 
-- name: Install gnome stuff
+- name: Gnome stuff
   apt:
     name: "{{ item }}"
     state: latest
     dpkg_options: 'force-confdef,force-confold'
   loop:
     - chrome-gnome-shell
-    - flat-remix
-    - flat-remix-gnome
-    - flat-remix-gtk
     - gnome-tweak-tool
     - gnome-shell-extensions
     - gnome-themes-standard
@@ -135,6 +121,14 @@
     - apt_repository:
         repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
         validate_certs: no
+    - name: "R: required packages"
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - libssl-dev
+        - libcurl4-openssl-dev
+      ignore_errors: yes
   tags: programming, R
 
 - name: R Studio {{ rstudio_version }}

@@ -6,6 +6,67 @@
      insertafter: EOF
      validate: '/usr/sbin/visudo -cf %s'
 
+- name: "Gnome Theme: flat-remix"
+  block:
+    - apt_repository:
+        repo: "ppa:daniruiz/flat-remix"
+        validate_certs: no
+      ignore_errors: yes
+    - name: "flat-remix"
+      apt:
+        name: "{{ item }}"
+      loop:
+        - flat-remix
+        - flat-remix-gnome
+        - flat-remix-gtk
+        - imagemagick
+        - libglib2.0-dev-bin
+
+- name: "Gnome Themes: github"
+  become_user: "{{ user }}"
+  ignore_errors: yes
+  tags: gnome, themes
+  block:
+    - file:
+        path: "{{ item }}"
+        state: directory
+        owner: '{{ user }}'
+        group: '{{ user }}'
+        mode: 0755
+      loop:
+        - '/home/{{ user }}/.themes'
+        - '/home/{{ user }}/.icons'
+    - name: "Gnome Themes: Nordic"
+      git:
+        repo: "https://github.com/EliverLara/Nordic.git"
+        depth: 1
+        dest: "/home/{{ user }}/.themes/Nordic"
+    - name: "Gnome Themes: Nordic Polar"
+      git:
+        repo: "https://github.com/EliverLara/Nordic-Polar.git"
+        dest: "/home/{{ user }}/.themes/Nordic-Polar"
+        depth: 1
+    - name: "Gnome Themes: Ant"
+      git:
+        repo: "https://github.com/EliverLara/Ant.git"
+        dest: "/home/{{ user }}/.themes/Ant"
+        depth: 1
+    - name: "MacOS Themes"
+      git:
+        repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
+        dest: "/home/{{ user }}/.themes"
+        depth: 1
+    - name: "eOS-Sierra-Gtk"
+      git:
+        repo: "https://github.com/btd1337/eOS-Sierra-Gtk.git"
+        dest: "/home/{{ user }}/.themes/eOs-Sierra-Gtk"
+        depth: 1
+    - name: "la-capitaine-icon-theme"
+      git:
+        repo: "https://github.com/keeferrourke/la-capitaine-icon-theme.git"
+        dest: "/home/{{ user }}/.icons/la-capitaine-icon-theme"
+        depth: 1
+
 - name: Terminator with Nord theme
   block:
     - file:
@@ -44,22 +105,6 @@
           - { property: 'font',                value: 'Liberation Mono 8' }
           - { property: 'use_system_font',     value: 'False' }
       when: ansible_config.stat.exists == False
-
-
-- name: "Create themes directory"
-  file:
-    path: '/home/{{ user }}/.themes'
-    state: directory
-    owner: '{{ user }}'
-    group: '{{ user }}'
-    mode: 0755
-
-- name: "MacOS Themes"
-  git:
-    repo:  https://github.com/paullinuxthemer/Mc-OS-themes
-    dest: "/home/{{ user }}/.themes"
-    depth: 1
-  become_user: "{{ user }}"
 
 - name: Instala extensoes do VSCode
   tags: programming, vscode
