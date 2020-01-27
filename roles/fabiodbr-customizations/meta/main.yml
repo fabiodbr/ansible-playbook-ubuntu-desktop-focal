@@ -1,5 +1,5 @@
 galaxy_info:
-  author: Fabio Rizzi 
+  author: Fabio Rizzi
   description: Personal customizations
   company: None
 
@@ -48,5 +48,5 @@ galaxy_info:
     #       Maximum 20 tags per role.
 
 dependencies:
-- src: https://github.com/gantsign/ansible-role-visual-studio-code-extensions 
+- src: https://github.com/gantsign/ansible-role-visual-studio-code-extensions
 

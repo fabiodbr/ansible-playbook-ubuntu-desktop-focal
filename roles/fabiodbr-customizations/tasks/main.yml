@@ -8,11 +8,12 @@
 
 - name: "Gnome Theme: flat-remix"
   block:
-    - apt_repository:
+    - name: "gnome-theme: ppa"
+      apt_repository:
         repo: "ppa:daniruiz/flat-remix"
         validate_certs: no
       ignore_errors: yes
-    - name: "flat-remix"
+    - name: "gnome-theme: flat-remix"
       apt:
         name: "{{ item }}"
       loop:
@@ -23,6 +24,7 @@
         - libglib2.0-dev-bin
 
 - name: "Gnome Themes: github"
+  become: yes
   become_user: "{{ user }}"
   ignore_errors: yes
   tags: gnome, themes
@@ -98,13 +100,13 @@
           regexp: '^background_color'
           insertafter: '^background_color'
           line: "    {{ item.property }} = {{ item.value }}"
-        with_items: 
+        with_items:
           - { property: 'background_darkness', value: '0.9' }
           - { property: 'background_type',     value: 'transparent' }
           - { property: 'scrollback_lines',    value: '50000' }
           - { property: 'font',                value: 'Liberation Mono 8' }
           - { property: 'use_system_font',     value: 'False' }
-      when: ansible_config.stat.exists == False
+      when: not ansible_config.stat.exists
 
 - name: Instala extensoes do VSCode
   tags: programming, vscode
@@ -112,17 +114,16 @@
   - name: "VSCode Extensions"
     ignore_errors: yes
     include_role:
-      name: ansible-role-visual-studio-code-extensions 
+      name: ansible-role-visual-studio-code-extensions
     vars:
       visual_studio_code_extensions_build: stable
       users:
         - username: "{{ user }}"
           visual_studio_code_extensions:
-            - timonwong.ansible-autocomplete 
+            - timonwong.ansible-autocomplete
             - dbaeumer.vscode-eslint
             - mauve.terraform
             - 4ops.terraform
             - donjayamanne.githistory
           visual_studio_code_extensions_absent:
             - seanmcbreen.Spell
-    

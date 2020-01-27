@@ -183,6 +183,7 @@
   block:
     - name: "VSCode: Install"
       tags: dev, vscode, visual-studio-code
+      become: yes
       become_user: "{{ user }}"
       shell: "yes | umake ide visual-studio-code --accept-license {{ vscode_installation  }}"
     - name: "VSCode: symlink for 'code'"
@@ -204,7 +205,6 @@
         src: "/tmp/menlo/Menlo for Powerline.ttf"
         dest: /usr/share/fonts
     - name: Update font cache
-      shell:
-        cmd: fc-cache -f -v
+      command: fc-cache -f -v
   ignore_errors: yes
   tags: fonts
