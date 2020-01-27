@@ -54,6 +54,8 @@
     - gettext
     - r-base
     - vlc
+    - libssl-dev
+    - libcurl4-openssl-dev
   ignore_errors: yes
 
 - name: Install gnome stuff
