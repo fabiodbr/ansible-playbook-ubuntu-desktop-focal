@@ -26,6 +26,7 @@
   loop:
     - python3
     - python3-pip
+    - p7zip-full
     - vim
     - git
     - lm-sensors
