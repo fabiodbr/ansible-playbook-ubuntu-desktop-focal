@@ -31,7 +31,8 @@
   tags: gnome, themes
   when: '"themes" is defined and "themes" in install'
   block:
-    - file:
+    - name: "Gnome Themes: creating user folders"
+      file:
         path: "{{ item }}"
         state: directory
         owner: '{{ user }}'
@@ -74,33 +75,39 @@
 - name: Terminator with Nord theme
   when: '"shell" is defined and "shell" in install'
   block:
-    - file:
-        path: '/home/{{ user }}/.config/terminator'
-        state: directory
-        owner: '{{ user }}'
-        group: '{{ user }}'
-        mode: 0755
-    - stat:
+    - name: "Terminator config file"
+      stat:
         path: "/home/{{ user }}/.config/terminator/config"
-      register: ansible_config
+      register: terminator_config
     - name: "terminator: nord theme"
-      when: not ansible_config.stat.exists
+      when: not terminator_config.stat.exists
       block:
-        - git:
+        - name: "Terminator: create config directory"
+          file:
+            path: '/home/{{ user }}/.config/terminator'
+            state: directory
+            owner: '{{ user }}'
+            group: '{{ user }}'
+            mode: 0755
+        - name: "Terminator: git clone"
+          git:
             repo: https://github.com/arcticicestudio/nord-terminator.git
             dest: /tmp/nord
             depth: 1
-        - copy:
+        - name: "Terminator: copy"
+          copy:
             src: '/tmp/nord/src/config'
             dest: '/home/{{ user }}/.config/terminator/config'
             owner: "{{ user }}"
             group: "{{ user }}"
             mode: 0644
-        - replace:
+        - name: "Terminator: replace"
+          replace:
             dest: '/home/{{ user }}/.config/terminator/config'
             regexp: 'nord'
             replace: 'default'
-        - lineinfile:
+        - name: "Terminator: lineinfile"
+          lineinfile:
             dest: '/home/{{ user }}/.config/terminator/config'
             regexp: '^background_color'
             insertafter: '^background_color'

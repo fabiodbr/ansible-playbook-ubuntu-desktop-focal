@@ -7,9 +7,9 @@
       apt_repository:
         repo: 'ppa:graphics-drivers/ppa'
         validate_certs: no
-    - name: 'gpu drivers: apt upgrade'
+    - name: 'gpu drivers: upgrade'
       apt:
-        upgrade: yes
+        upgrade: 'yes'
         update_cache: yes
         cache_valid_time: 3600
 
@@ -174,7 +174,7 @@
 
 - name: R Studio {{ rstudio_version }}
   when: '"R" is defined and "R" in install'
-  tags: programming, R, ide, rstudio  
+  tags: programming, R, ide, rstudio
   block:
     - name: 'R Studio: packages facts'
       package_facts:
@@ -198,7 +198,7 @@
         path: /opt/anaconda3/bin
       register: anaconda
     - name: "Install Anaconda"
-      when: anaconda.stat.exists == False
+      when: not anaconda.stat.exists
       block:
       - name: "Anaconda: prerequisites"
         apt:

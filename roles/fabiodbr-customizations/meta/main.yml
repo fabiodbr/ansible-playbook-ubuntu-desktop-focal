@@ -4,8 +4,15 @@ galaxy_info:
   company: None
   license: MIT
   min_ansible_version: 2.9
-  galaxy_tags: []
-
+  platforms:
+    - name: Ubuntu
+      versions:
+        - 19.10
+  galaxy_tags:
+    - ubuntu
+    - eoan
+    - fabiodbr
+    - desktop
 dependencies:
   - src: https://github.com/gantsign/ansible-role-visual-studio-code-extensions
     when: '"ide" is defined and "ide" in install'
