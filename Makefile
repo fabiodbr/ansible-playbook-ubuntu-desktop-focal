@@ -3,6 +3,7 @@
 args = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
 
 install: ansible-requirements ## Executa o playbook completo. Para especificar argumentos utilize Ex: make install -- --tags <TAG>
+	@sudo -k
 	@echo Instaling...
 	@ansible-playbook main.yml -e 'ansible_python_interpreter=/usr/bin/python3' $(call args,)
 	

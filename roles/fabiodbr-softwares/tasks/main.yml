@@ -1,8 +1,4 @@
 ---
-- name: "Run os-specific tasks"
+- name: "Loading {{ ansible_facts['distribution'] | lower }}.yml"
   include_tasks:
     file: "{{ ansible_facts['distribution'] | lower }}.yml"
-
-- name: "Run os-agnostic tasks"
-  include_tasks:
-    file: generic.yml

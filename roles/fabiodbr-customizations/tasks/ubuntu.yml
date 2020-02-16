@@ -1,0 +1,223 @@
+---
+- name: "sudoers: Don't prompt for password"
+  lineinfile:
+     path: /etc/sudoers
+     line: "{{ user }} ALL=(ALL) NOPASSWD:ALL"
+     insertafter: EOF
+     validate: '/usr/sbin/visudo -cf %s'
+
+- name: "Gnome Theme: flat-remix"
+  when: '"themes" is defined and "themes" in install'
+  block:
+    - name: "gnome-theme: ppa"
+      apt_repository:
+        repo: "ppa:daniruiz/flat-remix"
+        validate_certs: no
+      ignore_errors: yes
+    - name: "gnome-theme: flat-remix"
+      apt:
+        name: "{{ item }}"
+      loop:
+        - imagemagick
+        - libglib2.0-dev-bin
+        - flat-remix
+        - flat-remix-gnome
+        - flat-remix-gtk
+
+- name: "Gnome Themes from github"
+  become: yes
+  become_user: "{{ user }}"
+  ignore_errors: yes
+  tags: gnome, themes
+  when: '"themes" is defined and "themes" in install'
+  block:
+    - file:
+        path: "{{ item }}"
+        state: directory
+        owner: '{{ user }}'
+        group: '{{ user }}'
+        mode: 0755
+      loop:
+        - '/home/{{ user }}/.themes'
+        - '/home/{{ user }}/.icons'
+    - name: "Gnome Themes: Nordic"
+      git:
+        repo: "https://github.com/EliverLara/Nordic.git"
+        depth: 1
+        dest: "/home/{{ user }}/.themes/Nordic"
+    - name: "Gnome Themes: Nordic Polar"
+      git:
+        repo: "https://github.com/EliverLara/Nordic-Polar.git"
+        dest: "/home/{{ user }}/.themes/Nordic-Polar"
+        depth: 1
+    - name: "Gnome Themes: Ant"
+      git:
+        repo: "https://github.com/EliverLara/Ant.git"
+        dest: "/home/{{ user }}/.themes/Ant"
+        depth: 1
+    - name: "MacOS Themes"
+      git:
+        repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
+        dest: "/home/{{ user }}/.themes"
+        depth: 1
+    - name: "eOS-Sierra-Gtk"
+      git:
+        repo: "https://github.com/btd1337/eOS-Sierra-Gtk.git"
+        dest: "/home/{{ user }}/.themes/eOs-Sierra-Gtk"
+        depth: 1
+    - name: "la-capitaine-icon-theme"
+      git:
+        repo: "https://github.com/keeferrourke/la-capitaine-icon-theme.git"
+        dest: "/home/{{ user }}/.icons/la-capitaine-icon-theme"
+        depth: 1
+
+- name: Terminator with Nord theme
+  when: '"shell" is defined and "shell" in install'
+  block:
+    - file:
+        path: '/home/{{ user }}/.config/terminator'
+        state: directory
+        owner: '{{ user }}'
+        group: '{{ user }}'
+        mode: 0755
+    - stat:
+        path: "/home/{{ user }}/.config/terminator/config"
+      register: ansible_config
+    - name: "terminator: nord theme"
+      when: not ansible_config.stat.exists
+      block:
+        - git:
+            repo: https://github.com/arcticicestudio/nord-terminator.git
+            dest: /tmp/nord
+            depth: 1
+        - copy:
+            src: '/tmp/nord/src/config'
+            dest: '/home/{{ user }}/.config/terminator/config'
+            owner: "{{ user }}"
+            group: "{{ user }}"
+            mode: 0644
+        - replace:
+            dest: '/home/{{ user }}/.config/terminator/config'
+            regexp: 'nord'
+            replace: 'default'
+        - lineinfile:
+            dest: '/home/{{ user }}/.config/terminator/config'
+            regexp: '^background_color'
+            insertafter: '^background_color'
+            line: "    {{ item.property }} = {{ item.value }}"
+          with_items:
+            - { property: 'background_darkness', value: '0.9' }
+            - { property: 'background_type',     value: 'transparent' }
+            - { property: 'scrollback_lines',    value: '50000' }
+            - { property: 'font',                value: 'Liberation Mono 8' }
+            - { property: 'use_system_font',     value: 'False' }
+
+- name: Powerline-Shell
+  when: '"shell" is defined and "shell" in install'
+  block:
+    - name: Install powerline-shell
+      pip:
+        name: powerline-shell
+        state: latest
+    - name: install powerline fonts
+      apt:
+        name: "fonts-powerline"
+        state: latest
+    - name: Enable powerline-shell
+      blockinfile:
+        path: /etc/bash.bashrc
+        insertafter: EOF
+        content: |
+          function _update_ps1() {
+            PS1=$(powerline-shell $?)
+          }
+          if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
+            PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
+          fi
+
+- name: Install nerdfonts
+  tags: shell, font
+  when: '"fonts" in install'
+  ignore_errors: yes
+  block:
+    - name: "nerdfonts: verify if already installed"
+      stat:
+        path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
+      register: nerdfonts
+    - name: "nerdfonts: install"
+      when: 'not nerdfonts.stat.exists'
+      block:
+        - name: "nerdfonts: python-fontforge"
+          apt:
+            name: python-fontforge
+            state: latest
+        - name: "nerdfonts: git clone"
+          become: yes
+          become_user: "{{ user }}"
+          git:
+            repo: https://github.com/ryanoasis/nerd-fonts.git
+            dest: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
+            depth: 1
+        - name: "nerdfonts: install"
+          become: yes
+          become_user: "{{ user }}"
+          command: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}/install.sh -U"
+        - name: "nerdfonts: mark as installed"
+          become: yes
+          become_user: "{{ user }}"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
+            state: touch
+      rescue:
+        - name: "nerdfonts: removing file marker: /home/{{ user }}/.local/share/fonts/.nerdfonts"
+          become: yes
+          become_user: "{{ user }}"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
+            state: absent
+        - name: "nerdfonts: removing git folder"
+          file:
+            path: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
+            state: absent
+
+- name: Menlo Monospace for VScode
+  tags: fonts
+  when: '"fonts" is defined and "fonts" in install'
+  stat:
+    path: "/usr/share/fonts/Menlo for Powerline.ttf"
+  register: menlo
+- name: "Install Menlo Monospace"
+  when: "not menlo.stat.exists"
+  block:
+    - name: "menlo monospace: clones repository"
+      git:
+        repo: https://github.com/abertsch/Menlo-for-Powerline.git
+        dest: /tmp/menlo
+        depth: 1
+    - name: Copy font
+      copy:
+        src: "/tmp/menlo/Menlo for Powerline.ttf"
+        dest: /usr/share/fonts
+    - name: Update font cache
+      command: fc-cache -f -v
+
+- name: VSCode Extensions
+  tags: programming, vscode
+  when: '"ide" is defined and "ide" in install'
+  block:
+  - name: "VSCode Extensions"
+    ignore_errors: yes
+    include_role:
+      name: ansible-role-visual-studio-code-extensions
+    vars:
+      visual_studio_code_extensions_build: stable
+      users:
+        - username: "{{ user }}"
+          visual_studio_code_extensions:
+            - timonwong.ansible-autocomplete
+            - dbaeumer.vscode-eslint
+            - mauve.terraform
+            - 4ops.terraform
+            - donjayamanne.githistory
+          visual_studio_code_extensions_absent:
+            - seanmcbreen.Spell

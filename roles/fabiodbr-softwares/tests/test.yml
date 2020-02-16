@@ -2,4 +2,4 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - fabiodbr-gnome-env
+    - fabiodbr-softwares

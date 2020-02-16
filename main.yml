@@ -1,6 +1,27 @@
 ---
 - hosts: localhost
-  name: Welcome Fabio.
+  connection: local
   roles:
-    - { role: fabiodbr-softwares, become: yes }
-    - { role: fabiodbr-customizations, become: yes }
+    - role: fabiodbr-softwares
+      become: yes
+      vars:
+        install:
+          - drivers
+          - packages
+          - ide
+          - python3
+          - anaconda
+          - R
+          - docker
+          - chrome
+          - terminal
+          - gimp
+
+    - role: fabiodbr-customizations
+      become: yes
+      vars:
+        install:
+          - fonts
+          - shell
+          - themes
+          - ide

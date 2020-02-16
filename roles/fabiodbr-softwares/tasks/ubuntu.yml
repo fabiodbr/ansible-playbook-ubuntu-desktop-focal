@@ -1,67 +1,99 @@
 ---
-- name: Add PPAs
-  apt_repository:
-    repo: '{{ item }}'
-    validate_certs: no
-  loop:
-    - ppa:otto-kesselgulasch/gimp
-    - ppa:graphics-drivers/ppa
+- name: 'Proprietary GPU Drivers'
+  when: '"drivers" is defined and "drivers" in install'
   ignore_errors: yes
+  block:
+    - name: 'gpu drivers: PPA'
+      apt_repository:
+        repo: 'ppa:graphics-drivers/ppa'
+        validate_certs: no
+    - name: 'gpu drivers: apt upgrade'
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 3600
 
-- name: apt upgrade
-  apt:
-    upgrade: yes
-    update_cache: yes
+- name: Packages
+  when: '"packages" is defined and "packages" in install'
+  block:
+    - name: Basic Packages
+      apt:
+        cache_valid_time: 3600
+        dpkg_options: 'force-confold,force-confdef'
+        autoremove: yes
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - p7zip-full
+        - vim
+        - git
+        - lm-sensors
+        - curl
+        - apt-transport-https
+        - ca-certificates
+        - software-properties-common
+        - ubuntu-make
+        - tilix
+        - deluge
+        - htop
+        - asciinema
+        - httpie
+        - expect
+        - ubuntu-restricted-extras
+        - gettext
+        - r-base
+        - vlc
+        - ansible-lint
 
-- name: packages facts
-  package_facts:
-    manager: auto
+    - name: Gnome stuff
+      apt:
+        name: "{{ item }}"
+        state: latest
+        dpkg_options: 'force-confdef,force-confold'
+        cache_valid_time: 3600
+      loop:
+        - gnome-tweak-tool
+        - gnome-shell-extensions
+        - gnome-themes-standard
+        - gnome-shell-extensions
+        - gnome-shell-extension-weather
 
-- name: install essential packages
-  apt:
-    dpkg_options: 'force-confold,force-confdef'
-    autoremove: yes
-    name: "{{ item }}"
-    state: latest
-  loop:
-    - python3
-    - python3-pip
-    - p7zip-full
-    - vim
-    - git
-    - lm-sensors
-    - curl
-    - apt-transport-https
-    - ca-certificates
-    - software-properties-common
-    - ubuntu-make
-    - tilix
-    - gimp
-    - deluge
-    - htop
-    - asciinema
-    - httpie
-    - expect
-    - ubuntu-restricted-extras
-    - gettext
-    - r-base
-    - vlc
-  ignore_errors: yes
+- name: Python 3
+  tags: programming, python
+  when: '"python3" is defined and "python3" in install'
+  block:
+    - name: Install Python 3
+      apt:
+        dpkg_options: 'force-confold,force-confdef'
+        autoremove: yes
+        cache_valid_time: 3600
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - python3
+        - python3-pip
+    - name: Python3 packages
+      pip:
+        name: "{{ item }}"
+      loop:
+        - http-prompt
 
-- name: Gnome stuff
-  apt:
-    name: "{{ item }}"
-    state: latest
-    dpkg_options: 'force-confdef,force-confold'
-  loop:
-    - chrome-gnome-shell
-    - gnome-tweak-tool
-    - gnome-shell-extensions
-    - gnome-themes-standard
-    - gnome-shell-extensions
-    - gnome-shell-extension-weather
+- name: Gimp
+  when: '"gimp" in install'
+  block:
+    - name: 'gimp: install ppa'
+      apt_repository:
+        repo: 'ppa:otto-kesselgulasch/gimp'
+        validate_certs: no
+    - name: 'gimp: apt install'
+      apt:
+        name: gimp
+        state: latest
+        cache_valid_time: 3600
 
 - name: Google Chrome
+  tags: chrome
+  when: '"chrome" is defined and "chrome" in install'
   block:
     - name: "chrome apt-keys"
       apt_key:
@@ -74,9 +106,13 @@
       apt:
         name: google-chrome-stable
         state: latest
-  tags: chrome
+    - name: 'chrome: gnome integrations'
+      apt:
+        name: chrome-gnome-shell
+        state: latest
 
 - name: Docker Community Edition
+  when: '"docker" is defined and "docker" in install'
   block:
     - name: "docker-ce: remove snap if present"
       snap:
@@ -95,7 +131,7 @@
       apt_key:
         url: "https://download.docker.com/linux/ubuntu/gpg"
         state: present
-    - name: "docker-ce: repository"
+    - name: "docker-ce: add repository"
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu disco stable"
         state: present
@@ -103,47 +139,109 @@
       apt:
         name: docker-ce
         state: present
-    - name: ensure docker group is present
+    - name: "docker-ce: docker group"
       group:
         name: docker
         state: present
-    - name: "Add {{ user }} to docker group"
+    - name: "docker-ce: add {{ user }} to docker group"
       user:
         name: "{{ user }}"
         groups: "docker"
         append: yes
 
 - name: R
+  tags: programming, R
+  when: '"R" is defined and "R" in install'
   block:
-    - apt_key:
+    - name: 'R: keyserver'
+      apt_key:
         keyserver: "keyserver.ubuntu.com"
         id: "E298A3A825C0D65DFD57CBB651716619E084DAB9"
         state: present
-    - apt_repository:
+    - name: 'R: apt-repository'
+      apt_repository:
         repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
         validate_certs: no
-    - name: "R: required packages"
+    - name: "R: packages"
       apt:
         name: "{{ item }}"
         state: latest
+        cache_valid_time: 3600
       loop:
         - libssl-dev
         - libcurl4-openssl-dev
-      ignore_errors: yes
-  tags: programming, R
+        - r-base
 
 - name: R Studio {{ rstudio_version }}
-  apt:
-    deb: "https://download1.rstudio.org/desktop/bionic/amd64/rstudio-{{ rstudio_version }}-amd64.deb"
-    state: present
-  when: "ansible_facts.packages['rstudio'][0].version != rstudio_version"
-  ignore_errors: yes
-  tags: programming, ide, rstudio
+  when: '"R" is defined and "R" in install'
+  tags: programming, R, ide, rstudio  
+  block:
+    - name: 'R Studio: packages facts'
+      package_facts:
+        manager: auto
+    - debug:
+        var: "ansible_facts.packages['rstudio'][0].version"
+        verbosity: 4
+    - name: "R Studio: install"
+      apt:
+        deb: "https://download1.rstudio.org/desktop/bionic/amd64/rstudio-{{ rstudio_version }}-amd64.deb"
+        state: present
+      when: "ansible_facts.packages['rstudio'][0].version != rstudio_version"
 
-- name: Remove unity look
-  apt:
-    state: absent
-    name: gnome-shell-extension-ubuntu-dock
+
+- name: Anaconda
+  tags: programming, anaconda
+  when: '"anaconda" is defined and "anaconda" in install'
+  block:
+    - name: "Anaconda: verify if already installed"
+      stat:
+        path: /opt/anaconda3/bin
+      register: anaconda
+    - name: "Install Anaconda"
+      when: anaconda.stat.exists == False
+      block:
+      - name: "Anaconda: prerequisites"
+        apt:
+          name: "{{ item }}"
+          update_cache: yes
+          cache_valid_time: 3600
+        loop:
+          - libgl1-mesa-glx
+          - libegl1-mesa
+          - libxrandr2
+          - libxss1
+          - libxcursor1
+          - libxcomposite1
+          - libasound2
+          - libxi6
+          - libxtst6
+      - name: "Anaconda: Verify if already downloaded"
+        stat:
+          path: "/tmp/Anaconda3-2019.10-Linux-x86_64.sh"
+          checksum_algorithm: md5
+        register: anaconda_downloaded
+      - name: "Anaconda: Download"
+        when: "not anaconda_downloaded.stat.exists or anaconda_downloaded.stat.md5 != anaconda_md5"
+        get_url:
+          url: "{{ anaconda_url }}"
+          dest: "/tmp/{{ anaconda_md5 }}.sh"
+          checksum: "md5:{{ anaconda_md5 }}"
+          mode: 0550
+      - name: "Anaconda: Install"
+        command: "bash /tmp/{{ anaconda_md5 }}.sh -b -p /opt/anaconda3"
+      - name: "Anaconda: add /opt/anaconda3/bin to PATH"
+        lineinfile:
+          path: /etc/profile
+          state: present
+          line: "PATH=$PATH:/opt/anaconda3/bin"
+      - name: "Anaconda: changing /opt/anaconda3 ownership to {{ user }}"
+        file:
+          path: /opt/anaconda3
+          state: directory
+          owner: "{{ user }}"
+          group: "{{ user }}"
+          mode: 0755
+          recurse: yes
 
 - name: Terminator
   block:
@@ -156,30 +254,12 @@
       apt:
         name: terminator
         state: latest
-
-- name: Powerline-Shell
-  block:
-    - name: Install powerline-shell
-      pip:
-        name: powerline-shell
-        state: latest
-    - name: install powerline fonts
-      apt:
-        name: "fonts-powerline"
-        state: latest
-    - name: Enable powerline-shell
-      blockinfile:
-        path: /etc/bash.bashrc
-        insertafter: EOF
-        content: |
-          function _update_ps1() {
-            PS1=$(powerline-shell $?)
-          }
-          if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
-            PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
-          fi
+        cache_valid_time: 3600
+  when: '"terminal" is defined and "terminal" in install'
 
 - name: VSCode
+  when: '"vscode" is defined and "vscode" in install'
+  tags: programming, vscode, ide
   block:
     - name: "VSCode: Install"
       tags: dev, vscode, visual-studio-code
@@ -191,20 +271,3 @@
         src: "{{ vscode_bin }}"
         dest: "{{ vscode_symlink }}"
         state: link
-  tags: programming, vscode, ide
-
-- name: Menlo monospace for VScode
-  block:
-    - name: Clones repository
-      git:
-        repo: https://github.com/abertsch/Menlo-for-Powerline.git
-        dest: /tmp/menlo
-        depth: 1
-    - name: Copy font
-      copy:
-        src: "/tmp/menlo/Menlo for Powerline.ttf"
-        dest: /usr/share/fonts
-    - name: Update font cache
-      command: fc-cache -f -v
-  ignore_errors: yes
-  tags: fonts
