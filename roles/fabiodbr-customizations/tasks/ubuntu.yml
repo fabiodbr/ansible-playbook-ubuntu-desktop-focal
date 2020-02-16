@@ -6,6 +6,11 @@
      insertafter: EOF
      validate: '/usr/sbin/visudo -cf %s'
 
+- name: "Remove Ubuntu Dock"
+  apt:
+    name: gnome-shell-extension-ubuntu-dock
+    state: absent
+
 - name: "Gnome Theme: flat-remix"
   when: '"themes" is defined and "themes" in install'
   block:
