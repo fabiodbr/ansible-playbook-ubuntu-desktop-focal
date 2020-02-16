@@ -238,6 +238,11 @@
             - johnpapa.vscode-peacock
             - Shan.code-settings-sync
 
+            # Docker
+            - ms-vscode-remote.remote-containers
+            - ms-azuretools.vscode-docker
+            - formulahendry.docker-explorer
+
             # Python
             - ms-python.python
             - dongli.python-preview
