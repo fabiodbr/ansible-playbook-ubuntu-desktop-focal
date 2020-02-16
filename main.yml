@@ -16,6 +16,7 @@
           - chrome
           - terminal
           - gimp
+          - virtualbox
 
     - role: fabiodbr-customizations
       become: yes

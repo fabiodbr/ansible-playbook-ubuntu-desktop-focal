@@ -231,5 +231,24 @@
             - mauve.terraform
             - 4ops.terraform
             - donjayamanne.githistory
+
+            - auchenberg.vscode-browser-preview
+            - shd101wyy.markdown-preview-enhanced
+            - 2gua.rainbow-brackets
+            - johnpapa.vscode-peacock
+            - Shan.code-settings-sync
+
+            # Python
+            - ms-python.python
+            - dongli.python-preview
+            - njpwerner.autodocstring
+            - LittleFoxTeam.vscode-python-test-adapter
+            - ms-pyright.pyright
+
+            # Rust
+            - swellaby.rust-pack
+            - JScearcy.rust-doc-viewer
+            - polypus74.trusty-rusty-snippets
+
           visual_studio_code_extensions_absent:
             - seanmcbreen.Spell

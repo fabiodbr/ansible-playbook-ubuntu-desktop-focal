@@ -44,6 +44,8 @@
         - r-base
         - vlc
         - ansible-lint
+        - direnv
+        - ondir
 
     - name: Gnome stuff
       apt:
@@ -256,6 +258,29 @@
         state: latest
         cache_valid_time: 3600
   when: '"terminal" is defined and "terminal" in install'
+
+- name: VirtualBox
+  tags: virtualbox
+  when: '"virtualbox" is defined and "virtualbox" in install'
+  block:
+    - name: "virtualbox: apt-keys"
+      apt_key:
+        url: "{{ item }}"
+        state: present
+      loop:
+        - "https://www.virtualbox.org/download/oracle_vbox_2016.asc"
+        - "https://www.virtualbox.org/download/oracle_vbox.asc"
+    - name: "virtualbox: repository"
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian eoan contrib"
+    - name: 'virtualbox: upgrade'
+      apt:
+        upgrade: 'yes'
+        update_cache: yes
+    - name: "virtualbox: install"
+      apt:
+        name: virtualbox
+        state: latest
 
 - name: VSCode
   when: '"vscode" is defined and "vscode" in install'
