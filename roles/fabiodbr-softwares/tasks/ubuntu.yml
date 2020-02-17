@@ -46,6 +46,7 @@
         - ansible-lint
         - direnv
         - ondir
+        - neofetch
 
     - name: Gnome stuff
       apt:
