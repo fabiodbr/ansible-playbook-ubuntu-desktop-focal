@@ -11,6 +11,22 @@
     name: gnome-shell-extension-ubuntu-dock
     state: absent
 
+- name: Configure github token with gnome-keyring
+  block:
+  - name:  "gnome-keyring: packages"
+    apt:
+      name: "{{ item }}"
+      state: latest
+    loop:
+      - libsecret-1-0
+      - libsecret-1-dev
+  - name: "gnome-keyring: build library"
+    command: (make -C /usr/share/doc/git/contrib/credential/libsecret)
+  - name: "configure git global credential.helper"
+    become: yes
+    become_user: "{{ user }}"
+    command: git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+
 - name: "Gnome Theme: flat-remix"
   when: '"themes" is defined and "themes" in install'
   block:
