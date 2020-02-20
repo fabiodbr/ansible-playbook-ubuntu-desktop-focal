@@ -229,6 +229,19 @@
     - name: Update font cache
       command: fc-cache -f -v
 
+- name: "Ram storage for /tmp directory"
+  when: '"tmp.mount" is defined and "tmp.mount" in install'
+  block:
+    - name: Copy tmp.mount template
+      copy:
+        src: /usr/share/systemd/tmp.mount
+        dest: /etc/systemd/system/tmp.mount
+    - name: Enable tmp.mount service
+      systemd:
+        name: tmp.mount
+        enabled: yes
+        state: started
+
 - name: VSCode Extensions
   tags: programming, vscode
   when: '"ide" is defined and "ide" in install'
