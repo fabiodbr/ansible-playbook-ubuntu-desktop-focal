@@ -20,12 +20,20 @@
     loop:
       - libsecret-1-0
       - libsecret-1-dev
+  - name: "gnome-keyring: verify if already compiled"
+    stat:
+      path: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+    register: git_credential
   - name: "gnome-keyring: build library"
-    command: (make -C /usr/share/doc/git/contrib/credential/libsecret)
+    when: not git_credential.stat.exists
+    make:
+      chdir: /usr/share/doc/git/contrib/credential/libsecret
+      target: all
   - name: "configure git global credential.helper"
     become: yes
     become_user: "{{ user }}"
     command: git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+    changed_when: False
 
 - name: "Gnome Theme: flat-remix"
   when: '"themes" is defined and "themes" in install'
@@ -240,8 +248,6 @@
       systemd:
         name: tmp.mount
         enabled: yes
-        state: started
-
 - name: VSCode Extensions
   tags: programming, vscode
   when: '"ide" is defined and "ide" in install'
