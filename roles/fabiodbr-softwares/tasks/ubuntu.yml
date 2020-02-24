@@ -1,4 +1,11 @@
 ---
+- name: System upgrade
+  apt:
+    upgrade: 'yes'
+    update_cache: yes
+    cache_valid_time: 3600
+    dpkg_options: 'force-confold,force-confdef'
+
 - name: 'Proprietary GPU Drivers'
   when: '"drivers" is defined and "drivers" in install'
   ignore_errors: yes
@@ -11,14 +18,12 @@
       apt:
         upgrade: 'yes'
         update_cache: yes
-        cache_valid_time: 3600
 
 - name: Packages
   when: '"packages" is defined and "packages" in install'
   block:
     - name: Basic Packages
       apt:
-        cache_valid_time: 3600
         dpkg_options: 'force-confold,force-confdef'
         autoremove: yes
         name: "{{ item }}"
