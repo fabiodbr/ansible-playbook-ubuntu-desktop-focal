@@ -180,6 +180,31 @@
         - libcurl4-openssl-dev
         - r-base
 
+- name: google-cloud-sdk
+  when: '"google-cloud-sdk" is defined and "google-cloud-sdk" in install'
+  tags: cli, google, devops
+  block:
+    - name: "google-cloud-sdk: packages"
+      apt:
+        name: apt-transport-https
+        cache_valid_time: 3600
+        state: present
+    - name: "google-cloud-sdk: apt-key"
+      apt_key:
+        url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+        keyring: "/usr/share/keyrings/cloud.google.gpg"
+        state: present
+    - name: "google-cloud-sdk: repository"
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main"
+    - name: "google-cloud-sdk: packages"
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - google-cloud-sdk
+        - kubectl
+
 - name: R Studio {{ rstudio_version }}
   when: '"R" is defined and "R" in install'
   tags: programming, R, ide, rstudio
