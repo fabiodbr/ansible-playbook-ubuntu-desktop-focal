@@ -75,31 +75,37 @@
         repo: "https://github.com/EliverLara/Nordic.git"
         depth: 1
         dest: "/home/{{ user }}/.themes/Nordic"
+        force: yes
     - name: "Gnome Themes: Nordic Polar"
       git:
         repo: "https://github.com/EliverLara/Nordic-Polar.git"
         dest: "/home/{{ user }}/.themes/Nordic-Polar"
         depth: 1
+        force: yes
     - name: "Gnome Themes: Ant"
       git:
         repo: "https://github.com/EliverLara/Ant.git"
         dest: "/home/{{ user }}/.themes/Ant"
         depth: 1
+        force: yes
     - name: "MacOS Themes"
       git:
         repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
         dest: "/home/{{ user }}/.themes"
         depth: 1
+        force: yes
     - name: "eOS-Sierra-Gtk"
       git:
         repo: "https://github.com/btd1337/eOS-Sierra-Gtk.git"
         dest: "/home/{{ user }}/.themes/eOs-Sierra-Gtk"
         depth: 1
+        force: yes
     - name: "la-capitaine-icon-theme"
       git:
         repo: "https://github.com/keeferrourke/la-capitaine-icon-theme.git"
         dest: "/home/{{ user }}/.icons/la-capitaine-icon-theme"
         depth: 1
+        force: yes
 
 - name: Terminator with Nord theme
   when: '"shell" is defined and "shell" in install'
@@ -123,6 +129,7 @@
             repo: https://github.com/arcticicestudio/nord-terminator.git
             dest: /tmp/nord
             depth: 1
+            force: yes
         - name: "Terminator: copy"
           copy:
             src: '/tmp/nord/src/config'
