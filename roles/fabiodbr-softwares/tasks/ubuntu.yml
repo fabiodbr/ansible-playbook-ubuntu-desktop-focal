@@ -53,6 +53,8 @@
         - ondir
         - neofetch
         - bash-completion
+        - glances
+        - rsync
 
     - name: Gnome stuff
       apt:
