@@ -55,6 +55,9 @@
         - bash-completion
         - glances
         - rsync
+        - sysstat
+        - debian-goodies
+        - debsecan
 
     - name: Gnome stuff
       apt:

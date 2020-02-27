@@ -11,13 +11,14 @@
           - ide
           - python3
           - anaconda
-          - R
+#          - R
           - docker
           - chrome
           - terminal
           - gimp
           - virtualbox
           - google-cloud-sdk
+          - security-packages
 
     - role: fabiodbr-customizations
       become: yes
