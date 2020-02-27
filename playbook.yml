@@ -11,7 +11,7 @@
           - ide
           - python3
           - anaconda
-#          - R
+          - R
           - docker
           - chrome
           - terminal
