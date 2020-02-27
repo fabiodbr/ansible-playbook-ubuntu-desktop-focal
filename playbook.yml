@@ -9,6 +9,7 @@
           - drivers
           - packages
           - ide
+          - vscode
           - python3
           - anaconda
           - R
