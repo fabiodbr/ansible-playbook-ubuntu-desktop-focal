@@ -273,6 +273,7 @@
             - mauve.terraform
             - 4ops.terraform
             - donjayamanne.githistory
+            - emmanuelbeziat.vscode-great-icons
 
             - auchenberg.vscode-browser-preview
             - shd101wyy.markdown-preview-enhanced
