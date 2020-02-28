@@ -58,6 +58,8 @@
         - sysstat
         - debian-goodies
         - debsecan
+        - scdaemon
+        - kleopatra
 
     - name: Gnome stuff
       apt:
