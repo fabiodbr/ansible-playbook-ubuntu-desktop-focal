@@ -226,23 +226,26 @@
 - name: Menlo Monospace for VScode
   tags: fonts
   when: '"fonts" is defined and "fonts" in install'
-  stat:
-    path: "/usr/share/fonts/Menlo for Powerline.ttf"
-  register: menlo
-- name: "Install Menlo Monospace"
-  when: "not menlo.stat.exists"
   block:
-    - name: "menlo monospace: clones repository"
-      git:
-        repo: https://github.com/abertsch/Menlo-for-Powerline.git
-        dest: /tmp/menlo
-        depth: 1
-    - name: Copy font
-      copy:
-        src: "/tmp/menlo/Menlo for Powerline.ttf"
-        dest: /usr/share/fonts
-    - name: Update font cache
-      command: fc-cache -f -v
+    - name: "menlo: verify if already exists"
+      stat:
+        path: "/usr/share/fonts/Menlo for Powerline.ttf"
+      register: menlo
+    - name: "Install Menlo Monospace"
+      when: 'not menlo.stat.exists'
+      block:
+        - name: "menlo monospace: clones repository"
+          git:
+            repo: https://github.com/abertsch/Menlo-for-Powerline.git
+            dest: /tmp/menlo
+            depth: 1
+            force: yes
+        - name: Copy font
+          copy:
+            src: "/tmp/menlo/Menlo for Powerline.ttf"
+            dest: /usr/share/fonts
+        - name: Update font cache
+          command: fc-cache -f -v
 
 - name: "Ram storage for /tmp directory"
   when: '"tmp.mount" is defined and "tmp.mount" in install'

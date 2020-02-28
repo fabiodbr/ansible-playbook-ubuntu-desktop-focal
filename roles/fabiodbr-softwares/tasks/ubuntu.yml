@@ -147,7 +147,7 @@
         state: present
     - name: "docker-ce: add repository"
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu disco stable"
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu eoan stable"
         state: present
     - name: "docker-ce: install"
       apt:
