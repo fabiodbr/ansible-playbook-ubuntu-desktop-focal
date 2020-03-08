@@ -148,7 +148,7 @@
             regexp: '^background_color'
             insertafter: '^background_color'
             line: "    {{ item.property }} = {{ item.value }}"
-          with_items:
+          loop:
             - { property: 'background_darkness', value: '0.9' }
             - { property: 'background_type',     value: 'transparent' }
             - { property: 'scrollback_lines',    value: '50000' }
@@ -258,6 +258,7 @@
       systemd:
         name: tmp.mount
         enabled: yes
+
 - name: VSCode Extensions
   tags: programming, vscode
   when: '"ide" is defined and "ide" in install'

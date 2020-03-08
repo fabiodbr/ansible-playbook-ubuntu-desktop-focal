@@ -286,6 +286,7 @@
           recurse: yes
 
 - name: Terminator
+  when: '"terminal" is defined and "terminal" in install'
   block:
     - name: "Terminator: ppa repository"
       apt_repository:
@@ -297,7 +298,6 @@
         name: terminator
         state: latest
         cache_valid_time: 3600
-  when: '"terminal" is defined and "terminal" in install'
 
 - name: VirtualBox
   tags: virtualbox
