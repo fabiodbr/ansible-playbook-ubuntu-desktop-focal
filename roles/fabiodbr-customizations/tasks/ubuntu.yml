@@ -1,10 +1,10 @@
 ---
 - name: "sudoers: Don't prompt for password"
   lineinfile:
-     path: /etc/sudoers
-     line: "{{ user }} ALL=(ALL) NOPASSWD:ALL"
-     insertafter: EOF
-     validate: '/usr/sbin/visudo -cf %s'
+    path: /etc/sudoers
+    line: "{{ user }} ALL=(ALL) NOPASSWD:ALL"
+    insertafter: EOF
+    validate: "/usr/sbin/visudo -cf %s"
 
 - name: "Remove Ubuntu Dock"
   apt:
@@ -13,27 +13,27 @@
 
 - name: Configure github token with gnome-keyring
   block:
-  - name:  "gnome-keyring: packages"
-    apt:
-      name: "{{ item }}"
-      state: latest
-    loop:
-      - libsecret-1-0
-      - libsecret-1-dev
-  - name: "gnome-keyring: verify if already compiled"
-    stat:
-      path: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
-    register: git_credential
-  - name: "gnome-keyring: build library"
-    when: not git_credential.stat.exists
-    make:
-      chdir: /usr/share/doc/git/contrib/credential/libsecret
-      target: all
-  - name: "configure git global credential.helper"
-    become: yes
-    become_user: "{{ user }}"
-    command: git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
-    changed_when: False
+    - name: "gnome-keyring: packages"
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - libsecret-1-0
+        - libsecret-1-dev
+    - name: "gnome-keyring: verify if already compiled"
+      stat:
+        path: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+      register: git_credential
+    - name: "gnome-keyring: build library"
+      when: not git_credential.stat.exists
+      make:
+        chdir: /usr/share/doc/git/contrib/credential/libsecret
+        target: all
+    - name: "configure git global credential.helper"
+      become: yes
+      become_user: "{{ user }}"
+      command: git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+      changed_when: False
 
 - name: "Gnome Theme: flat-remix"
   when: '"themes" is defined and "themes" in install'
@@ -64,12 +64,12 @@
       file:
         path: "{{ item }}"
         state: directory
-        owner: '{{ user }}'
-        group: '{{ user }}'
+        owner: "{{ user }}"
+        group: "{{ user }}"
         mode: 0755
       loop:
-        - '/home/{{ user }}/.themes'
-        - '/home/{{ user }}/.icons'
+        - "/home/{{ user }}/.themes"
+        - "/home/{{ user }}/.icons"
     - name: "Gnome Themes: Nordic"
       git:
         repo: "https://github.com/EliverLara/Nordic.git"
@@ -119,10 +119,10 @@
       block:
         - name: "Terminator: create config directory"
           file:
-            path: '/home/{{ user }}/.config/terminator'
+            path: "/home/{{ user }}/.config/terminator"
             state: directory
-            owner: '{{ user }}'
-            group: '{{ user }}'
+            owner: "{{ user }}"
+            group: "{{ user }}"
             mode: 0755
         - name: "Terminator: git clone"
           git:
@@ -132,28 +132,28 @@
             force: yes
         - name: "Terminator: copy"
           copy:
-            src: '/tmp/nord/src/config'
-            dest: '/home/{{ user }}/.config/terminator/config'
+            src: "/tmp/nord/src/config"
+            dest: "/home/{{ user }}/.config/terminator/config"
             owner: "{{ user }}"
             group: "{{ user }}"
             mode: 0644
         - name: "Terminator: replace"
           replace:
-            dest: '/home/{{ user }}/.config/terminator/config'
-            regexp: 'nord'
-            replace: 'default'
+            dest: "/home/{{ user }}/.config/terminator/config"
+            regexp: "nord"
+            replace: "default"
         - name: "Terminator: lineinfile"
           lineinfile:
-            dest: '/home/{{ user }}/.config/terminator/config'
-            regexp: '^background_color'
-            insertafter: '^background_color'
+            dest: "/home/{{ user }}/.config/terminator/config"
+            regexp: "^background_color"
+            insertafter: "^background_color"
             line: "    {{ item.property }} = {{ item.value }}"
           loop:
-            - { property: 'background_darkness', value: '0.9' }
-            - { property: 'background_type',     value: 'transparent' }
-            - { property: 'scrollback_lines',    value: '50000' }
-            - { property: 'font',                value: 'Liberation Mono 8' }
-            - { property: 'use_system_font',     value: 'False' }
+            - { property: "background_darkness", value: "0.9" }
+            - { property: "background_type", value: "transparent" }
+            - { property: "scrollback_lines", value: "50000" }
+            - { property: "font", value: "Liberation Mono 8" }
+            - { property: "use_system_font", value: "False" }
 
 - name: Powerline-Shell
   when: '"shell" is defined and "shell" in install'
@@ -188,7 +188,7 @@
         path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
       register: nerdfonts
     - name: "nerdfonts: install"
-      when: 'not nerdfonts.stat.exists'
+      when: "not nerdfonts.stat.exists"
       block:
         - name: "nerdfonts: python-fontforge"
           apt:
@@ -232,7 +232,7 @@
         path: "/usr/share/fonts/Menlo for Powerline.ttf"
       register: menlo
     - name: "Install Menlo Monospace"
-      when: 'not menlo.stat.exists'
+      when: "not menlo.stat.exists"
       block:
         - name: "menlo monospace: clones repository"
           git:
@@ -263,44 +263,46 @@
   tags: programming, vscode
   when: '"ide" is defined and "ide" in install'
   block:
-  - name: "VSCode Extensions"
-    ignore_errors: yes
-    include_role:
-      name: ansible-role-visual-studio-code-extensions
-    vars:
-      visual_studio_code_extensions_build: stable
-      users:
-        - username: "{{ user }}"
-          visual_studio_code_extensions:
-            - timonwong.ansible-autocomplete
-            - dbaeumer.vscode-eslint
-            - mauve.terraform
-            - 4ops.terraform
-            - donjayamanne.githistory
-            - emmanuelbeziat.vscode-great-icons
+    - name: "VSCode Extensions"
+      ignore_errors: yes
+      include_role:
+        name: ansible-role-visual-studio-code-extensions
+      vars:
+        visual_studio_code_extensions_build: stable
+        users:
+          - username: "{{ user }}"
+            visual_studio_code_extensions:
+              - timonwong.ansible-autocomplete
+              - dbaeumer.vscode-eslint
+              - mauve.terraform
+              - 4ops.terraform
+              - donjayamanne.githistory
 
-            - auchenberg.vscode-browser-preview
-            - shd101wyy.markdown-preview-enhanced
-            - 2gua.rainbow-brackets
-            - johnpapa.vscode-peacock
-            - Shan.code-settings-sync
+              - auchenberg.vscode-browser-preview
+              - shd101wyy.markdown-preview-enhanced
+              - johnpapa.vscode-peacock
+              - Shan.code-settings-sync
+              - CoenraadS.bracket-pair-colorizer-2
+              - esbenp.prettier-vscode
+              - pkief.material-icon-theme
+              - azemoh.one-monokai
 
-            # Docker
-            - ms-vscode-remote.remote-containers
-            - ms-azuretools.vscode-docker
-            - formulahendry.docker-explorer
+              # Docker
+              - ms-vscode-remote.remote-containers
+              - ms-azuretools.vscode-docker
+              - formulahendry.docker-explorer
 
-            # Python
-            - ms-python.python
-            - dongli.python-preview
-            - njpwerner.autodocstring
-            - LittleFoxTeam.vscode-python-test-adapter
-            - ms-pyright.pyright
+              # Python
+              - ms-python.python
+              - dongli.python-preview
+              - njpwerner.autodocstring
+              - LittleFoxTeam.vscode-python-test-adapter
+              - ms-pyright.pyright
 
-            # Rust
-            - swellaby.rust-pack
-            - JScearcy.rust-doc-viewer
-            - polypus74.trusty-rusty-snippets
+              # Rust
+              - swellaby.rust-pack
+              - JScearcy.rust-doc-viewer
+              - polypus74.trusty-rusty-snippets
 
-          visual_studio_code_extensions_absent:
-            - seanmcbreen.Spell
+            visual_studio_code_extensions_absent:
+              - seanmcbreen.Spell
