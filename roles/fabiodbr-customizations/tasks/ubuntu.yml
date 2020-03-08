@@ -280,12 +280,16 @@
 
               - auchenberg.vscode-browser-preview
               - shd101wyy.markdown-preview-enhanced
-              - johnpapa.vscode-peacock
               - Shan.code-settings-sync
-              - CoenraadS.bracket-pair-colorizer-2
-              - esbenp.prettier-vscode
+
+              # Visual
+              - equinusocio.vsc-material-theme
               - pkief.material-icon-theme
               - azemoh.one-monokai
+              - CoenraadS.bracket-pair-colorizer-2
+              - esbenp.prettier-vscode
+              - johnpapa.vscode-peacock
+              - marqu3s.aurora-x
 
               # Docker
               - ms-vscode-remote.remote-containers
