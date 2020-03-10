@@ -29,38 +29,39 @@
         name: "{{ item }}"
         state: latest
       loop:
-        - p7zip-full
-        - vim
-        - git
-        - lm-sensors
-        - curl
+        - p7zip-full #compression
+        - vim #editor
+        - git #versioning
+        - lm-sensors #sensor
+        - curl #tool
         - apt-transport-https
         - ca-certificates
         - software-properties-common
-        - ubuntu-make
-        - tilix
-        - deluge
-        - htop
-        - asciinema
-        - httpie
-        - expect
-        - ubuntu-restricted-extras
-        - gettext
-        - r-base
-        - vlc
-        - ansible-lint
+        - ubuntu-make #ide
+        - tilix #terminal
+        - deluge #torrent
+        - htop #tool
+        - asciinema #terminal recording
+        - httpie #curl
+        - expect #tool
+        - ubuntu-restricted-extras #extra packages
+        - gettext #
+        - vlc #video player
+        - ansible-lint #ansible linter
         - direnv
-        - ondir
-        - neofetch
+        - ondir 
+        - neofetch #bash eyecandy
         - bash-completion
-        - glances
-        - rsync
-        - sysstat
+        - glances #monitoring
+        - rsync #file tool
+        - sysstat #monitoring
         - debian-goodies
-        - debsecan
-        - scdaemon
-        - kleopatra
-        - ipcalc
+        - debsecan #pgp
+        - scdaemon #pgp
+        - kleopatra #pgp gui
+        - ipcalc #networking
+        - screenfetch #screenshot
+
 
     - name: Gnome stuff
       apt:
