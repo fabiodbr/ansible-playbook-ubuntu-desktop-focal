@@ -1,5 +1,6 @@
 ---
 - name: "sudoers: Don't prompt for password"
+  when: '"sudoers" is defined and "sudoers" in configure'
   lineinfile:
     path: /etc/sudoers
     line: "{{ user }} ALL=(ALL) NOPASSWD:ALL"
@@ -7,24 +8,26 @@
     validate: "/usr/sbin/visudo -cf %s"
 
 - name: "Remove Ubuntu Dock"
+  when: '"remove-ubuntu-dock" is defined and "remove-ubuntu-dock" in configure'
   apt:
     name: gnome-shell-extension-ubuntu-dock
     state: absent
 
 - name: Configure github token with gnome-keyring
+  when: '"gnome-keyring" is defined and "gnome-keyring" in configure'
   block:
-    - name: "gnome-keyring: packages"
+    - name: "[gnome-keyring]: packages"
       apt:
         name: "{{ item }}"
         state: latest
       loop:
         - libsecret-1-0
         - libsecret-1-dev
-    - name: "gnome-keyring: verify if already compiled"
+    - name: "[gnome-keyring]: verify if already compiled"
       stat:
         path: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
       register: git_credential
-    - name: "gnome-keyring: build library"
+    - name: "[gnome-keyring]: build library"
       when: not git_credential.stat.exists
       make:
         chdir: /usr/share/doc/git/contrib/credential/libsecret
@@ -35,15 +38,15 @@
       command: git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
       changed_when: False
 
-- name: "Gnome Theme: flat-remix"
-  when: '"themes" is defined and "themes" in install'
+- name: "gnome-theme-flat-remix"
+  when: '"gnome-theme-flat-remix" is defined and "gnome-theme-flat-remix" in install'
   block:
-    - name: "gnome-theme: ppa"
+    - name: "[gnome-theme-flat-remix]: flax-remix PPA"
       apt_repository:
         repo: "ppa:daniruiz/flat-remix"
         validate_certs: no
       ignore_errors: yes
-    - name: "gnome-theme: flat-remix"
+    - name: "[gnome-theme-flat-remix]: flat-remix install"
       apt:
         name: "{{ item }}"
       loop:
@@ -58,9 +61,9 @@
   become_user: "{{ user }}"
   ignore_errors: yes
   tags: gnome, themes
-  when: '"themes" is defined and "themes" in install'
+  when: '"gnome-themes" is defined and "gnome-themes" in install'
   block:
-    - name: "Gnome Themes: creating user folders"
+    - name: "[gnome-themes]: creating user folders"
       file:
         path: "{{ item }}"
         state: directory
@@ -70,45 +73,51 @@
       loop:
         - "/home/{{ user }}/.themes"
         - "/home/{{ user }}/.icons"
-    - name: "Gnome Themes: Nordic"
+    - name: "[Gnome-Shell-Theme]: Nordic"
       git:
         repo: "https://github.com/EliverLara/Nordic.git"
         depth: 1
         dest: "/home/{{ user }}/.themes/Nordic"
         force: yes
-    - name: "Gnome Themes: Nordic Polar"
+    - name: "[Gnome-Shell-Theme]: Nordic Polar"
       git:
         repo: "https://github.com/EliverLara/Nordic-Polar.git"
         dest: "/home/{{ user }}/.themes/Nordic-Polar"
         depth: 1
         force: yes
-    - name: "Gnome Themes: Ant"
+    - name: "[Gnome-Shell-Theme]: Ant"
       git:
         repo: "https://github.com/EliverLara/Ant.git"
         dest: "/home/{{ user }}/.themes/Ant"
         depth: 1
         force: yes
-    - name: "MacOS Themes"
-      git:
-        repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
-        dest: "/home/{{ user }}/.themes"
-        depth: 1
-        force: yes
-    - name: "eOS-Sierra-Gtk"
+    # - name: "MacOS Themes"
+    #   git:
+    #     repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
+    #     dest: "/home/{{ user }}/.themes"
+    #     depth: 1
+    #     force: yes
+    - name: "[Gnome-Shell-GTK]: eOS-Sierra"
       git:
         repo: "https://github.com/btd1337/eOS-Sierra-Gtk.git"
         dest: "/home/{{ user }}/.themes/eOs-Sierra-Gtk"
         depth: 1
         force: yes
-    - name: "la-capitaine-icon-theme"
+    - name: "[Gnome-Shell-Icons]: La-Capitaine"
       git:
         repo: "https://github.com/keeferrourke/la-capitaine-icon-theme.git"
-        dest: "/home/{{ user }}/.icons/la-capitaine-icon-theme"
+        dest: "/home/{{ user }}/.icons/La-Capitaine"
+        depth: 1
+        force: yes
+    - name: "[Gnome-Shell-Icons]: La-Sierra"
+      git:
+        repo: "https://github.com/btd1337/La-Sierra-Icon-Theme"
+        dest: "/home/{{ user }}/.icons/La-Sierra"
         depth: 1
         force: yes
 
 - name: Terminator with Nord theme
-  when: '"shell" is defined and "shell" in install'
+  when: '"terminator-nord-theme" is defined and "terminator-nord-theme" in install'
   block:
     - name: "Terminator config file"
       stat:
@@ -156,7 +165,7 @@
             - { property: "use_system_font", value: "False" }
 
 - name: Powerline-Shell
-  when: '"shell" is defined and "shell" in install'
+  when: '"bash-powerline-shell" is defined and "bash-powerline-shell" in install'
   block:
     - name: Install powerline-shell
       pip:
@@ -183,36 +192,36 @@
   when: '"fonts" in install'
   ignore_errors: yes
   block:
-    - name: "nerdfonts: verify if already installed"
+    - name: "[nerdfonts] verify if already installed"
       stat:
         path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
       register: nerdfonts
     - name: "nerdfonts: install"
       when: "not nerdfonts.stat.exists"
       block:
-        - name: "nerdfonts: python-fontforge"
-          apt:
-            name: python-fontforge
-            state: latest
-        - name: "nerdfonts: git clone"
+        # - name: "[nerdfonts] python-fontforge"
+        #   apt:
+        #     name: python-fontforge
+        #     state: latest
+        - name: "[nerdfonts] git clone"
           become: yes
           become_user: "{{ user }}"
           git:
             repo: https://github.com/ryanoasis/nerd-fonts.git
             dest: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
             depth: 1
-        - name: "nerdfonts: install"
+        - name: "[nerdfonts] install"
           become: yes
           become_user: "{{ user }}"
           command: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}/install.sh -U"
-        - name: "nerdfonts: mark as installed"
+        - name: "[nerdfonts] marking as installed"
           become: yes
           become_user: "{{ user }}"
           file:
             path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
             state: touch
       rescue:
-        - name: "nerdfonts: removing file marker: /home/{{ user }}/.local/share/fonts/.nerdfonts"
+        - name: "[nerdfonts] removing file marker: /home/{{ user }}/.local/share/fonts/.nerdfonts"
           become: yes
           become_user: "{{ user }}"
           file:
@@ -248,7 +257,7 @@
           command: fc-cache -f -v
 
 - name: "Ram storage for /tmp directory"
-  when: '"tmp.mount" is defined and "tmp.mount" in install'
+  when: '"tmp-mount" is defined and "tmp-mount" in install'
   block:
     - name: Copy tmp.mount template
       copy:
@@ -261,7 +270,7 @@
 
 - name: VSCode Extensions
   tags: programming, vscode
-  when: '"ide" is defined and "ide" in install'
+  when: '"vscode-extensions" is defined and "vscode-extensions" in install'
   block:
     - name: "VSCode Extensions"
       ignore_errors: yes
@@ -274,10 +283,7 @@
             visual_studio_code_extensions:
               - timonwong.ansible-autocomplete
               - dbaeumer.vscode-eslint
-              - mauve.terraform
-              - 4ops.terraform
               - donjayamanne.githistory
-
               - auchenberg.vscode-browser-preview
               - shd101wyy.markdown-preview-enhanced
               - Shan.code-settings-sync
@@ -290,6 +296,9 @@
               - esbenp.prettier-vscode
               - johnpapa.vscode-peacock
               - marqu3s.aurora-x
+
+              # Terraform
+              - 4ops.terraform
 
               # Docker
               - ms-vscode-remote.remote-containers

@@ -7,22 +7,22 @@
     dpkg_options: "force-confold,force-confdef"
 
 - name: "Proprietary GPU Drivers"
-  when: '"drivers" is defined and "drivers" in install'
+  when: '"graphics-drivers" is defined and "graphics-drivers" in install'
   ignore_errors: yes
   block:
-    - name: "gpu drivers: PPA"
+    - name: "[graphics-drivers] Adding PPA"
       apt_repository:
         repo: "ppa:graphics-drivers/ppa"
         validate_certs: no
-    - name: "gpu drivers: upgrade"
+    - name: "[graphics-drivers] Installing"
       apt:
         upgrade: "yes"
         update_cache: yes
 
 - name: Packages
-  when: '"packages" is defined and "packages" in install'
+  when: '"base-packages" is defined and "base-packages" in install'
   block:
-    - name: Basic Packages
+    - name: "[base-packages]: Generic packages."
       apt:
         dpkg_options: "force-confold,force-confdef"
         autoremove: yes
@@ -37,7 +37,6 @@
         - apt-transport-https
         - ca-certificates
         - software-properties-common
-        - ubuntu-make #ide
         - tilix #terminal
         - deluge #torrent
         - htop #tool
@@ -49,7 +48,7 @@
         - vlc #video player
         - ansible-lint #ansible linter
         - direnv
-        - ondir 
+        - ondir
         - neofetch #bash eyecandy
         - bash-completion
         - glances #monitoring
@@ -61,9 +60,7 @@
         - kleopatra #pgp gui
         - ipcalc #networking
         - screenfetch #screenshot
-
-
-    - name: Gnome stuff
+    - name: "[base-packages]: Gnome stuff"
       apt:
         name: "{{ item }}"
         state: latest
@@ -78,9 +75,9 @@
 
 - name: Python 3
   tags: programming, python
-  when: '"python3" is defined and "python3" in install'
+  when: '"python3-packages" is defined and "python3-packages" in install'
   block:
-    - name: Install Python 3
+    - name: "[python3-packages]: Install Python 3"
       apt:
         dpkg_options: "force-confold,force-confdef"
         autoremove: yes
@@ -90,41 +87,43 @@
       loop:
         - python3
         - python3-pip
-    - name: Python3 packages
+    - name: "[python3-packages]: installing pip3 packages"
       pip:
         name: "{{ item }}"
       loop:
         - http-prompt
 
-- name: Gimp
-  when: '"gimp" in install'
-  block:
-    - name: "gimp: install ppa"
-      apt_repository:
-        repo: "ppa:otto-kesselgulasch/gimp"
-        validate_certs: no
-    - name: "gimp: apt install"
-      apt:
-        name: gimp
-        state: latest
-        cache_valid_time: 3600
+# Broken
+# - name: Gimp
+#   when: '"gimp" in install'
+#   block:
+#     - name: "[gimp]: ppa"
+#       apt_repository:
+#         repo: "ppa:otto-kesselgulasch/gimp"
+#         validate_certs: no
+#     - name: "[gimp]: apt install"
+#       apt:
+#         name: gimp
+#         state: latest
+#         cache_valid_time: 3600
 
 - name: Google Chrome
   tags: chrome
   when: '"chrome" is defined and "chrome" in install'
   block:
-    - name: "chrome apt-keys"
+    - name: "[chrome]: apt-keys"
       apt_key:
         url: "https://dl-ssl.google.com/linux/linux_signing_key.pub"
         state: present
-    - name: "chrome repository"
+    - name: "[chrome]: repository"
       apt_repository:
         repo: "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main"
-    - name: "install google chrome"
+        filename: "google-chrome"
+    - name: "[chrome]: install google chrome"
       apt:
         name: google-chrome-stable
         state: latest
-    - name: "chrome: gnome integrations"
+    - name: "[chrome]: gnome-shell integrations"
       apt:
         name: chrome-gnome-shell
         state: latest
@@ -151,7 +150,7 @@
         state: present
     - name: "docker-ce: add repository"
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu eoan stable"
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
         state: present
     - name: "docker-ce: install"
       apt:
@@ -178,7 +177,7 @@
         state: present
     - name: "R: apt-repository"
       apt_repository:
-        repo: "deb https://cloud.r-project.org/bin/linux/ubuntu eoan-cran35/"
+        repo: "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran35/"
         validate_certs: no
     - name: "R: packages"
       apt:
@@ -194,20 +193,21 @@
   when: '"google-cloud-sdk" is defined and "google-cloud-sdk" in install'
   tags: cli, google, devops
   block:
-    - name: "google-cloud-sdk: packages"
+    - name: "[google-cloud-sdk]: packages"
       apt:
         name: apt-transport-https
         cache_valid_time: 3600
         state: present
-    - name: "google-cloud-sdk: apt-key"
+    - name: "[google-cloud-sdk]: apt-key"
       apt_key:
         url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
         keyring: "/usr/share/keyrings/cloud.google.gpg"
         state: present
-    - name: "google-cloud-sdk: repository"
+    - name: "[google-cloud-sdk]: repository"
       apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main"
-    - name: "google-cloud-sdk: packages"
+#        filename: "google-chrome"
+    - name: "[google-cloud-sdk]: packages"
       apt:
         name: "{{ item }}"
         state: latest
@@ -287,7 +287,7 @@
             recurse: yes
 
 - name: Terminator
-  when: '"terminal" is defined and "terminal" in install'
+  when: '"terminator" is defined and "terminator" in install'
   block:
     - name: "Terminator: ppa repository"
       apt_repository:
@@ -313,7 +313,7 @@
         - "https://www.virtualbox.org/download/oracle_vbox.asc"
     - name: "virtualbox: repository"
       apt_repository:
-        repo: "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian eoan contrib"
+        repo: "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian focal contrib"
     - name: "virtualbox: upgrade"
       apt:
         upgrade: "yes"
@@ -325,15 +325,31 @@
 
 - name: VSCode
   when: '"vscode" is defined and "vscode" in install'
-  tags: programming, vscode, ide
+  tags: programming, vscode
   block:
-    - name: "VSCode: Install"
-      tags: dev, vscode, visual-studio-code
-      become: yes
-      become_user: "{{ user }}"
-      shell: "yes | umake ide visual-studio-code --accept-license {{ vscode_installation  }}"
-    - name: "VSCode: symlink for 'code'"
-      file:
-        src: "{{ vscode_bin }}"
-        dest: "{{ vscode_symlink }}"
-        state: link
+    - name: "[VSCode]: Installing requirements"
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - software-properties-common
+        - apt-transport-https
+        - wget
+    - name: "[VSCode]: Downloading GPG keys"
+      apt_key:
+        url: "https://packages.microsoft.com/keys/microsoft.asc"
+        state: present
+    - name: "[VSCode]: Adding repository"
+      apt_repository:
+        repo: "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+        filename: "vscode"
+    - name: "[VSCode]: Install"
+      apt:
+        name: "code"
+        state: latest
+
+- name: "[Keybase]: Install"
+  when: '"keybase" is defined and "keybase" in install'
+  apt:
+    deb: "https://prerelease.keybase.io/keybase_amd64.deb"
+    state: present

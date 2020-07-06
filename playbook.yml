@@ -6,27 +6,32 @@
       become: yes
       vars:
         install:
-          - drivers
-          - packages
-          - ide
-          - vscode
-          - python3
-#          - R
-#          - anaconda
-          - docker
+          # - anaconda
+          - base-packages
           - chrome
-          - terminal
-          - gimp
-          - virtualbox
+          - docker
+          # - gimp
           - google-cloud-sdk
-          - security-packages
+          - graphics-drivers
+          - keybase
+          - python3-packages
+          # - R
+          # - terminator
+          # - virtualbox
+          - vscode
 
     - role: fabiodbr-customizations
       become: yes
       vars:
+        configure:
+          - sudoers
+          - gnome-keyring
+          - remove-ubuntu-dock
         install:
+          #- bash-powerline-shell
           - fonts
-          - shell
-          - themes
-          - ide
-          - tmp.mount
+          - gnome-themes
+          - gnome-theme-flat-remix
+          #- terminator-nord-theme
+          - vscode-extensions
+          #- tmp.mount
