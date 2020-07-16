@@ -29,37 +29,39 @@
         name: "{{ item }}"
         state: latest
       loop:
-        - p7zip-full #compression
-        - vim #editor
-        - git #versioning
-        - lm-sensors #sensor
-        - curl #tool
-        - apt-transport-https
-        - ca-certificates
-        - software-properties-common
-        - tilix #terminal
-        - deluge #torrent
-        - htop #tool
         - asciinema #terminal recording
-        - httpie #curl
-        - expect #tool
-        - ubuntu-restricted-extras #extra packages
-        - gettext #
-        - vlc #video player
-        - ansible-lint #ansible linter
-        - direnv
-        - ondir
-        - neofetch #bash eyecandy
+        - apt-transport-https
         - bash-completion
-        - glances #monitoring
-        - rsync #file tool
-        - sysstat #monitoring
-        - debian-goodies
+        - curl #tool
+        - ca-certificates
+        - debian-goodies # checkrestart, needrestart, check-enhancements, dgrep, dglob, debget, dpigs, debman, debmany, popbugs, which-pkg-broke, dhomepage
         - debsecan #pgp
-        - scdaemon #pgp
-        - kleopatra #pgp gui
+        - deluge #torrent
+        - direnv
+        - expect #tool
+        - fonts-firacode #developer font
+        - gettext #
+        - git #versioning
+        - glances #monitoring
+        - htop #tool
+        - httpie #curl
         - ipcalc #networking
+        - kleopatra #pgp gui
+        - lm-sensors #sensor
+        - neofetch #bash eyecandy
+        - ondir
+        - p7zip-full #compression
+        - rsync #file tool
+        - shotwell #image viewer
+        - software-properties-common
+        - scdaemon #pgp
         - screenfetch #screenshot
+        - sysstat #monitoring
+        - tilix #terminal
+        - ubuntu-restricted-extras #extra packages
+        - vim #editor
+        - vlc #video player
+        - zsh #shell
     - name: "[base-packages]: Gnome stuff"
       apt:
         name: "{{ item }}"
@@ -91,9 +93,19 @@
       pip:
         name: "{{ item }}"
       loop:
-        - http-prompt
+        - http-prompt # https://pypi.org/project/http-prompt/ - http client
+        - ansible-lint
+        # Python Code Tools: https://levelup.gitconnected.com/10-tools-i-use-to-craft-better-python-code
+        - black # https://pypi.org/project/black/ - PEP recomendations
+        - eradicate #
+        - vulture # https://pypi.org/project/vulture/ - find unused code
+        - coverage # https://pypi.org/project/coverage/ - python code analysis
+        - pylint # https://pypi.org/project/pylint/ - linter
+        - mypy # https://pypi.org/project/mypy/
+        - bandit # https://pypi.org/project/bandit/ - security testing
+        - radon # https://pypi.org/project/radon/ - SAST
 
-# Broken
+# Broken for Focal Fossa
 # - name: Gimp
 #   when: '"gimp" in install'
 #   block:
@@ -353,3 +365,217 @@
   apt:
     deb: "https://prerelease.keybase.io/keybase_amd64.deb"
     state: present
+
+- name: "Typora - Markdown Editor"
+  when: '"typora" is defined and "typora" in install'
+  ignore_errors: yes
+  block:
+    - name: "[typora]: pgp apt-key"
+      apt_key:
+        url: "https://typora.io/linux/public-key.asc"
+        state: present
+    - name: "[typora] Adding PPA"
+      apt_repository:
+        repo: "deb https://typora.io/linux ./"
+        validate_certs: no
+    - name: "[typora] Installing"
+      apt:
+        upgrade: "yes"
+        update_cache: yes
+        name: "typora"
+        state: latest
+
+- name: Menlo Monospace for VScode
+  tags: fonts
+  when: '"menlo-font" is defined and "menlo-font" in install'
+  block:
+    - name: "menlo: verify if already exists"
+      stat:
+        path: "/usr/share/fonts/Menlo for Powerline.ttf"
+      register: menlo
+    - name: "Install Menlo Monospace"
+      when: "not menlo.stat.exists"
+      block:
+        - name: "[menlo-font]: cloning repository"
+          git:
+            repo: https://github.com/abertsch/Menlo-for-Powerline.git
+            dest: /tmp/menlo
+            depth: 1
+            force: yes
+        - name: "[menlo-font]: installing font"
+          copy:
+            src: "/tmp/menlo/Menlo for Powerline.ttf"
+            dest: /usr/share/fonts
+        - name: Update font cache
+          command: fc-cache -f -v
+
+- name: Install nerdfonts
+  tags: shell, font
+  when: '"nerdfonts" in install'
+  ignore_errors: yes
+  block:
+    - name: "[nerdfonts] verify if already installed"
+      stat:
+        path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
+      register: nerdfonts
+    - name: "nerdfonts: install"
+      when: "not nerdfonts.stat.exists"
+      block:
+        - name: "[nerdfonts] git clone"
+          become: yes
+          become_user: "{{ user }}"
+          git:
+            repo: https://github.com/ryanoasis/nerd-fonts.git
+            dest: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
+            depth: 1
+        - name: "[nerdfonts] install"
+          become: yes
+          become_user: "{{ user }}"
+          command: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}/install.sh -U"
+        - name: "[nerdfonts] marking as installed"
+          become: yes
+          become_user: "{{ user }}"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
+            state: touch
+      rescue:
+        - name: "[nerdfonts] removing file marker: /home/{{ user }}/.local/share/fonts/.nerdfonts"
+          become: yes
+          become_user: "{{ user }}"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
+            state: absent
+        - name: "nerdfonts: removing git folder"
+          file:
+            path: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
+            state: absent
+
+- name: "Gnome themes and icons from github"
+  become: yes
+  become_user: "{{ user }}"
+  ignore_errors: yes
+  tags: gnome, themes
+  when: '"gnome-themes" is defined and "gnome-themes" in install'
+  block:
+    - name: "[gnome-themes]: creating user folders"
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: 0755
+      loop:
+        - "/home/{{ user }}/.themes"
+        - "/home/{{ user }}/.icons"
+    - name: "[Gnome-Shell-Theme]: Nordic"
+      git:
+        repo: "https://github.com/EliverLara/Nordic.git"
+        depth: 1
+        dest: "/home/{{ user }}/.themes/Nordic"
+        force: yes
+    - name: "[Gnome-Shell-Theme]: Nordic Polar"
+      git:
+        repo: "https://github.com/EliverLara/Nordic-Polar.git"
+        dest: "/home/{{ user }}/.themes/Nordic-Polar"
+        depth: 1
+        force: yes
+    - name: "[Gnome-Shell-Theme]: Ant"
+      git:
+        repo: "https://github.com/EliverLara/Ant.git"
+        dest: "/home/{{ user }}/.themes/Ant"
+        depth: 1
+        force: yes
+    - name: "[Gnome-Shell-GTK]: eOS-Sierra"
+      git:
+        repo: "https://github.com/btd1337/eOS-Sierra-Gtk.git"
+        dest: "/home/{{ user }}/.themes/eOs-Sierra-Gtk"
+        depth: 1
+        force: yes
+    - name: "[Gnome-Shell-Icons]: La-Capitaine"
+      git:
+        repo: "https://github.com/keeferrourke/la-capitaine-icon-theme.git"
+        dest: "/home/{{ user }}/.icons/La-Capitaine"
+        depth: 1
+        force: yes
+    - name: "[Gnome-Shell-Icons]: La-Sierra"
+      git:
+        repo: "https://github.com/btd1337/La-Sierra-Icon-Theme"
+        dest: "/home/{{ user }}/.icons/La-Sierra"
+        depth: 1
+        force: yes
+    # TODO: fix this
+    # - name: "MacOS Themes"
+    #   git:
+    #     repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
+    #     dest: "/home/{{ user }}/.themes"
+    #     depth: 1
+    #     force: yes
+
+- name: "gnome-theme-flat-remix"
+  when: '"gnome-theme-flat-remix" is defined and "gnome-theme-flat-remix" in install'
+  block:
+    - name: "[gnome-theme-flat-remix]: flax-remix PPA"
+      apt_repository:
+        repo: "ppa:daniruiz/flat-remix"
+        validate_certs: no
+      ignore_errors: yes
+    - name: "[gnome-theme-flat-remix]: flat-remix install"
+      apt:
+        name: "{{ item }}"
+      loop:
+        - imagemagick
+        - libglib2.0-dev-bin
+        - flat-remix
+        - flat-remix-gnome
+        - flat-remix-gtk
+
+# Example use of external roles
+# Warning: Deprecated! Use Shan.code-settings-sync extension.
+- name: VSCode Extensions
+  tags: programming, vscode
+  when: '"vscode-extensions" is defined and "vscode-extensions" in install'
+  block:
+    - name: "VSCode Extensions"
+      ignore_errors: yes
+      include_role:
+        name: ansible-role-visual-studio-code-extensions
+      vars:
+        visual_studio_code_extensions_build: stable
+        users:
+          - username: "{{ user }}"
+            visual_studio_code_extensions:
+              - timonwong.ansible-autocomplete
+              - dbaeumer.vscode-eslint
+              - donjayamanne.githistory
+              - auchenberg.vscode-browser-preview
+              - shd101wyy.markdown-preview-enhanced
+              - Shan.code-settings-sync
+              # Visual
+              - equinusocio.vsc-material-theme
+              - pkief.material-icon-theme
+              - azemoh.one-monokai
+              - CoenraadS.bracket-pair-colorizer-2
+              - esbenp.prettier-vscode
+              - johnpapa.vscode-peacock
+              - marqu3s.aurora-x
+              # Theme
+              - arcticicestudio.nord-visual-studio-code
+              # Terraform
+              - 4ops.terraform
+              # Docker
+              - ms-vscode-remote.remote-containers
+              - ms-azuretools.vscode-docker
+              - formulahendry.docker-explorer
+              # Python
+              - ms-python.python
+              - dongli.python-preview
+              - njpwerner.autodocstring
+              - LittleFoxTeam.vscode-python-test-adapter
+              - ms-pyright.pyright
+              # Rust
+              - swellaby.rust-pack
+              - JScearcy.rust-doc-viewer
+              - polypus74.trusty-rusty-snippets
+            # How to exclude extensions
+            visual_studio_code_extensions_absent:
+              - seanmcbreen.Spell

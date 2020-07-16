@@ -12,7 +12,7 @@ install: ansible-roles ## Run playbook.
 .PHONY: ansible-roles
 ansible-roles: ## Download ansible roles dependencies.
 	@echo "* Downloading requirements..."
-	@ansible-galaxy install --role-file roles/requirements.yml --roles-path roles/ --force 
+	@ansible-galaxy install --role-file roles/requirements.yml --roles-path roles/ --force
 
 .PHONY: requirements
 requirements: ## Install requirements: python3, pip3, ansible.

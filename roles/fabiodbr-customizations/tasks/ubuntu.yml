@@ -13,21 +13,21 @@
     name: gnome-shell-extension-ubuntu-dock
     state: absent
 
-- name: Configure github token with gnome-keyring
-  when: '"gnome-keyring" is defined and "gnome-keyring" in configure'
+- name: Use gnome keyring credential helper (gui password prompt)
+  when: '"gnome-keyring-credential-helper" is defined and "gnome-keyring-credential-helper" in configure'
   block:
-    - name: "[gnome-keyring]: packages"
+    - name: "[gnome-keyring-credential-helper]: packages"
       apt:
         name: "{{ item }}"
         state: latest
       loop:
         - libsecret-1-0
         - libsecret-1-dev
-    - name: "[gnome-keyring]: verify if already compiled"
+    - name: "[gnome-keyring-credential-helper]: verify if already compiled"
       stat:
         path: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
       register: git_credential
-    - name: "[gnome-keyring]: build library"
+    - name: "[gnome-keyring-credential-helper]: build library"
       when: not git_credential.stat.exists
       make:
         chdir: /usr/share/doc/git/contrib/credential/libsecret
@@ -35,89 +35,20 @@
     - name: "configure git global credential.helper"
       become: yes
       become_user: "{{ user }}"
-      command: git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+      git_config:
+        name: credential.helper
+        scope: global
+        value: '/usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret'
       changed_when: False
 
-- name: "gnome-theme-flat-remix"
-  when: '"gnome-theme-flat-remix" is defined and "gnome-theme-flat-remix" in install'
-  block:
-    - name: "[gnome-theme-flat-remix]: flax-remix PPA"
-      apt_repository:
-        repo: "ppa:daniruiz/flat-remix"
-        validate_certs: no
-      ignore_errors: yes
-    - name: "[gnome-theme-flat-remix]: flat-remix install"
-      apt:
-        name: "{{ item }}"
-      loop:
-        - imagemagick
-        - libglib2.0-dev-bin
-        - flat-remix
-        - flat-remix-gnome
-        - flat-remix-gtk
-
-- name: "Gnome Themes from github"
-  become: yes
-  become_user: "{{ user }}"
-  ignore_errors: yes
-  tags: gnome, themes
-  when: '"gnome-themes" is defined and "gnome-themes" in install'
-  block:
-    - name: "[gnome-themes]: creating user folders"
-      file:
-        path: "{{ item }}"
-        state: directory
-        owner: "{{ user }}"
-        group: "{{ user }}"
-        mode: 0755
-      loop:
-        - "/home/{{ user }}/.themes"
-        - "/home/{{ user }}/.icons"
-    - name: "[Gnome-Shell-Theme]: Nordic"
-      git:
-        repo: "https://github.com/EliverLara/Nordic.git"
-        depth: 1
-        dest: "/home/{{ user }}/.themes/Nordic"
-        force: yes
-    - name: "[Gnome-Shell-Theme]: Nordic Polar"
-      git:
-        repo: "https://github.com/EliverLara/Nordic-Polar.git"
-        dest: "/home/{{ user }}/.themes/Nordic-Polar"
-        depth: 1
-        force: yes
-    - name: "[Gnome-Shell-Theme]: Ant"
-      git:
-        repo: "https://github.com/EliverLara/Ant.git"
-        dest: "/home/{{ user }}/.themes/Ant"
-        depth: 1
-        force: yes
-    # - name: "MacOS Themes"
-    #   git:
-    #     repo: "https://github.com/paullinuxthemer/Mc-OS-themes.git"
-    #     dest: "/home/{{ user }}/.themes"
-    #     depth: 1
-    #     force: yes
-    - name: "[Gnome-Shell-GTK]: eOS-Sierra"
-      git:
-        repo: "https://github.com/btd1337/eOS-Sierra-Gtk.git"
-        dest: "/home/{{ user }}/.themes/eOs-Sierra-Gtk"
-        depth: 1
-        force: yes
-    - name: "[Gnome-Shell-Icons]: La-Capitaine"
-      git:
-        repo: "https://github.com/keeferrourke/la-capitaine-icon-theme.git"
-        dest: "/home/{{ user }}/.icons/La-Capitaine"
-        depth: 1
-        force: yes
-    - name: "[Gnome-Shell-Icons]: La-Sierra"
-      git:
-        repo: "https://github.com/btd1337/La-Sierra-Icon-Theme"
-        dest: "/home/{{ user }}/.icons/La-Sierra"
-        depth: 1
-        force: yes
+# - name: zsh themes
+#   git:
+#     repo: https://github.com/romkatv/powerlevel10k.git
+#     dest: /tmp/
+#     depth: 1
 
 - name: Terminator with Nord theme
-  when: '"terminator-nord-theme" is defined and "terminator-nord-theme" in install'
+  when: '"terminator-nord-theme" is defined and "terminator-nord-theme" in configure'
   block:
     - name: "Terminator config file"
       stat:
@@ -187,75 +118,6 @@
             PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
           fi
 
-- name: Install nerdfonts
-  tags: shell, font
-  when: '"fonts" in install'
-  ignore_errors: yes
-  block:
-    - name: "[nerdfonts] verify if already installed"
-      stat:
-        path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
-      register: nerdfonts
-    - name: "nerdfonts: install"
-      when: "not nerdfonts.stat.exists"
-      block:
-        # - name: "[nerdfonts] python-fontforge"
-        #   apt:
-        #     name: python-fontforge
-        #     state: latest
-        - name: "[nerdfonts] git clone"
-          become: yes
-          become_user: "{{ user }}"
-          git:
-            repo: https://github.com/ryanoasis/nerd-fonts.git
-            dest: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
-            depth: 1
-        - name: "[nerdfonts] install"
-          become: yes
-          become_user: "{{ user }}"
-          command: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}/install.sh -U"
-        - name: "[nerdfonts] marking as installed"
-          become: yes
-          become_user: "{{ user }}"
-          file:
-            path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
-            state: touch
-      rescue:
-        - name: "[nerdfonts] removing file marker: /home/{{ user }}/.local/share/fonts/.nerdfonts"
-          become: yes
-          become_user: "{{ user }}"
-          file:
-            path: "/home/{{ user }}/.local/share/fonts/.nerdfonts"
-            state: absent
-        - name: "nerdfonts: removing git folder"
-          file:
-            path: "/tmp/nerd-fonts-{{ ansible_date_time.epoch }}"
-            state: absent
-
-- name: Menlo Monospace for VScode
-  tags: fonts
-  when: '"fonts" is defined and "fonts" in install'
-  block:
-    - name: "menlo: verify if already exists"
-      stat:
-        path: "/usr/share/fonts/Menlo for Powerline.ttf"
-      register: menlo
-    - name: "Install Menlo Monospace"
-      when: "not menlo.stat.exists"
-      block:
-        - name: "menlo monospace: clones repository"
-          git:
-            repo: https://github.com/abertsch/Menlo-for-Powerline.git
-            dest: /tmp/menlo
-            depth: 1
-            force: yes
-        - name: Copy font
-          copy:
-            src: "/tmp/menlo/Menlo for Powerline.ttf"
-            dest: /usr/share/fonts
-        - name: Update font cache
-          command: fc-cache -f -v
-
 - name: "Ram storage for /tmp directory"
   when: '"tmp-mount" is defined and "tmp-mount" in install'
   block:
@@ -267,55 +129,3 @@
       systemd:
         name: tmp.mount
         enabled: yes
-
-- name: VSCode Extensions
-  tags: programming, vscode
-  when: '"vscode-extensions" is defined and "vscode-extensions" in install'
-  block:
-    - name: "VSCode Extensions"
-      ignore_errors: yes
-      include_role:
-        name: ansible-role-visual-studio-code-extensions
-      vars:
-        visual_studio_code_extensions_build: stable
-        users:
-          - username: "{{ user }}"
-            visual_studio_code_extensions:
-              - timonwong.ansible-autocomplete
-              - dbaeumer.vscode-eslint
-              - donjayamanne.githistory
-              - auchenberg.vscode-browser-preview
-              - shd101wyy.markdown-preview-enhanced
-              - Shan.code-settings-sync
-
-              # Visual
-              - equinusocio.vsc-material-theme
-              - pkief.material-icon-theme
-              - azemoh.one-monokai
-              - CoenraadS.bracket-pair-colorizer-2
-              - esbenp.prettier-vscode
-              - johnpapa.vscode-peacock
-              - marqu3s.aurora-x
-
-              # Terraform
-              - 4ops.terraform
-
-              # Docker
-              - ms-vscode-remote.remote-containers
-              - ms-azuretools.vscode-docker
-              - formulahendry.docker-explorer
-
-              # Python
-              - ms-python.python
-              - dongli.python-preview
-              - njpwerner.autodocstring
-              - LittleFoxTeam.vscode-python-test-adapter
-              - ms-pyright.pyright
-
-              # Rust
-              - swellaby.rust-pack
-              - JScearcy.rust-doc-viewer
-              - polypus74.trusty-rusty-snippets
-
-            visual_studio_code_extensions_absent:
-              - seanmcbreen.Spell

@@ -11,27 +11,30 @@
           - chrome
           - docker
           # - gimp
+          - gnome-themes
+          - gnome-theme-flat-remix
           - google-cloud-sdk
           - graphics-drivers
           - keybase
+          - menlo-font
+          - nerdfonts
           - python3-packages
           # - R
           # - terminator
           # - virtualbox
           - vscode
+          # - vscode-extensions
+          - typora
 
     - role: fabiodbr-customizations
       become: yes
       vars:
         configure:
           - sudoers
-          - gnome-keyring
+          # - gnome-keyring-credential-helper
           - remove-ubuntu-dock
+          # - terminator-nord-theme
         install:
-          #- bash-powerline-shell
-          - fonts
-          - gnome-themes
-          - gnome-theme-flat-remix
-          #- terminator-nord-theme
-          - vscode-extensions
-          #- tmp.mount
+          # - bash-powerline-shell
+
+          - tmp.mount
