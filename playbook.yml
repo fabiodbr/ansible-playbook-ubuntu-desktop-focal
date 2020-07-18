@@ -21,20 +21,19 @@
           - python3-packages
           # - R
           # - terminator
+          - typora
           # - virtualbox
           - vscode
           # - vscode-extensions
-          - typora
 
     - role: fabiodbr-customizations
       become: yes
       vars:
         configure:
-          - sudoers
+          - color-emoji
           # - gnome-keyring-credential-helper
           - remove-ubuntu-dock
+          - sudoers
           # - terminator-nord-theme
-        install:
-          # - bash-powerline-shell
-
+          - timedatectl
           - tmp.mount

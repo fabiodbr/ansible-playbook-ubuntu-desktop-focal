@@ -28,6 +28,7 @@
         autoremove: yes
         name: "{{ item }}"
         state: latest
+        cache_valid_time: 3600
       loop:
         - asciinema #terminal recording
         - apt-transport-https
@@ -380,8 +381,6 @@
         validate_certs: no
     - name: "[typora] Installing"
       apt:
-        upgrade: "yes"
-        update_cache: yes
         name: "typora"
         state: latest
 
@@ -579,3 +578,26 @@
             # How to exclude extensions
             visual_studio_code_extensions_absent:
               - seanmcbreen.Spell
+
+- name: Powerline-Shell
+  when: '"bash-powerline-shell" is defined and "bash-powerline-shell" in install'
+  block:
+    - name: Install powerline-shell
+      pip:
+        name: powerline-shell
+        state: latest
+    - name: install powerline fonts
+      apt:
+        name: "fonts-powerline"
+        state: latest
+    - name: Enable powerline-shell
+      blockinfile:
+        path: /etc/bash.bashrc
+        insertafter: EOF
+        content: |
+          function _update_ps1() {
+            PS1=$(powerline-shell $?)
+          }
+          if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
+            PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
+          fi

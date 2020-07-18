@@ -32,7 +32,7 @@
       make:
         chdir: /usr/share/doc/git/contrib/credential/libsecret
         target: all
-    - name: "configure git global credential.helper"
+    - name: "[gnome-keyring-credential-helper]: configure git global credential.helper"
       become: yes
       become_user: "{{ user }}"
       git_config:
@@ -95,31 +95,8 @@
             - { property: "font", value: "Liberation Mono 8" }
             - { property: "use_system_font", value: "False" }
 
-- name: Powerline-Shell
-  when: '"bash-powerline-shell" is defined and "bash-powerline-shell" in install'
-  block:
-    - name: Install powerline-shell
-      pip:
-        name: powerline-shell
-        state: latest
-    - name: install powerline fonts
-      apt:
-        name: "fonts-powerline"
-        state: latest
-    - name: Enable powerline-shell
-      blockinfile:
-        path: /etc/bash.bashrc
-        insertafter: EOF
-        content: |
-          function _update_ps1() {
-            PS1=$(powerline-shell $?)
-          }
-          if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
-            PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
-          fi
-
 - name: "Ram storage for /tmp directory"
-  when: '"tmp-mount" is defined and "tmp-mount" in install'
+  when: '"tmp-mount" is defined and "tmp-mount" in configure'
   block:
     - name: Copy tmp.mount template
       copy:
@@ -129,3 +106,42 @@
       systemd:
         name: tmp.mount
         enabled: yes
+
+# For dual booting with Windows
+- name: "timedatectl"
+  when: '"timedatectl" is defined and "timedatectl" in configure'
+  block:
+    - name: "[timedatectl]: Adjust dual boot clock"
+      command: "timedatectl set-local-rtc 1 --adjust-system-clock"
+      changed_when: false
+
+# Emoji with colors
+- name: "color-emoji"
+  when: '"color-emoji" is defined and "color-emoji" in configure'
+  become: yes
+  become_user: "{{ user }}"
+  block:
+    - name: "[font-color-emoji]: checking if already configured"
+      stat:
+        path: "/home/{{ user }}/.config/fontconfig/conf.d/01-emoji.conf"
+      register: st
+    - name: "[font-color-emoji]: installing..."
+      when: not st.stat.exists
+      block:
+        - name: "[font-color-emoji]: apt install"
+          become: yes
+          apt:
+            name: fonts-noto-color-emoji
+            state: latest
+            cache_valid_time: 3600
+        - name: "[font-color-emoji]: creating directory"
+          file:
+            path: "/home/{{ user }}/.config/fontconfig/conf.d/"
+            state: directory
+            recurse: yes
+        - name: "[font-color-emoji]: creating config file"
+          copy:
+            src: 01-emoji.conf
+            dest: "/home/{{ user }}/.config/fontconfig/conf.d/"
+        - name: "update font cache"
+          command: fc-cache -f -v
