@@ -1,4 +1,16 @@
 ---
+- block:
+  - name: 'Installing for Ubuntu 20.04 (focal)'
+    assert:
+      that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version == '20.04'
+      - ansible_distribution_release == 'focal'
+      msg:
+      - This Ansible playbook has been designed for Ubuntu 20.04 (focal)
+      - This appears to be {{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_distribution_release }})
+      - ABORTING
+
 - name: "sudoers: Don't prompt for password"
   when: '"sudoers" is defined and "sudoers" in configure'
   lineinfile:

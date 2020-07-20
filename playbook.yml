@@ -7,24 +7,28 @@
       vars:
         install:
           # - anaconda
-          - base-packages
-          - chrome
-          - docker
+          - apt-packages
+          # - bash-powerline-shell
+          - google-chrome
+          - docker-ce
           # - gimp
-          - gnome-themes
+          - gnome-themes-github
           - gnome-theme-flat-remix
-          - google-cloud-sdk
+            # - google-cloud-sdk
           - graphics-drivers
           - keybase
           - menlo-font
+          - meslolgs-font # vscode terminal font
           - nerdfonts
+          - paper-icon-theme
           - python3-packages
-          # - R
+          # - R-base
+          # - R-studio
           # - terminator
           - typora
           # - virtualbox
-          - vscode
-          # - vscode-extensions
+          - visual-studio-code
+          - vscode-extensions
 
     - role: fabiodbr-customizations
       become: yes

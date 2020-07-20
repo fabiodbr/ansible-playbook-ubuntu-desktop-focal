@@ -3,15 +3,15 @@ args = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
 ANSIBLE_PLAYBOOK_FILE=playbook.yml
 
 .PHONY: install
-install: ansible-roles ## Run playbook.
+install: ansible-roles-dependencies ## Run the playbook.
 	# Install. (optional arguments: make install -- <args>)
 	@sudo -v
 	@echo "* Instaling..."
 	@ansible-playbook $(ANSIBLE_PLAYBOOK_FILE) -e 'ansible_python_interpreter=/usr/bin/python3' $(call args,)
 
-.PHONY: ansible-roles
+.PHONY: ansible-roles-dependencies
 ansible-roles: ## Download ansible roles dependencies.
-	@echo "* Downloading requirements..."
+	@echo "* Downloading ansible roles dependencies..."
 	@ansible-galaxy install --role-file roles/requirements.yml --roles-path roles/ --force
 
 .PHONY: requirements
