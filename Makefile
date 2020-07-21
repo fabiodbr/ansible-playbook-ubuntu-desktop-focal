@@ -1,16 +1,18 @@
 .DEFAULT_GOAL := help
 args = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
-ANSIBLE_PLAYBOOK_FILE=playbook.yml
+REQUIRED_BINS = ansible ansible-galaxy python3 pip3
+ANSIBLE_PLAYBOOK_FILE = playbook.yml
 
 .PHONY: install
-install: ansible-roles-dependencies ## Run the playbook.
-	# Install. (optional arguments: make install -- <args>)
+install: dependencies ## Run the playbook.
+	# To input ansible-playbook arguments run: make install -- <args>
 	@sudo -v
-	@echo "* Instaling..."
 	@ansible-playbook $(ANSIBLE_PLAYBOOK_FILE) -e 'ansible_python_interpreter=/usr/bin/python3' $(call args,)
 
-.PHONY: ansible-roles-dependencies
-ansible-roles: ## Download ansible roles dependencies.
+.PHONY: dependencies
+dependencies: ## Download ansible roles dependencies.
+	$(foreach bin,$(REQUIRED_BINS),\
+		$(if $(shell command -v $(bin) 2> /dev/null),$(info Found '$(bin)'),$(error Please install `$(bin)`)))
 	@echo "* Downloading ansible roles dependencies..."
 	@ansible-galaxy install --role-file roles/requirements.yml --roles-path roles/ --force
 

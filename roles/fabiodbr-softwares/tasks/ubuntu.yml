@@ -21,12 +21,12 @@
 - name: apt-packages
   when: '"apt-packages" is defined and "apt-packages" in install'
   block:
-    - name: "[apt-packages]: installing packages."
+    - name: "[apt-packages]: installing packages"
       apt:
         dpkg_options: "force-confold,force-confdef"
         autoremove: yes
         name: "{{ item }}"
-        state: latest
+        state: present
         cache_valid_time: 3600
       loop:
         - asciinema #terminal recording
@@ -324,14 +324,22 @@
   when: '"graphics-drivers" is defined and "graphics-drivers" in install'
   ignore_errors: yes
   block:
-    - name: "[graphics-drivers]: adding PPA"
-      apt_repository:
-        repo: "ppa:graphics-drivers/ppa"
-        validate_certs: no
-    - name: "[graphics-drivers]: upgrading"
-      apt:
-        upgrade: "yes"
-        update_cache: yes
+    - name: "[graphics-drivers]: install check"
+      stat:
+        path: "/etc/apt/sources.list.d/ppa_graphics_drivers_ppa_{{ ansible_distribution_release }}.list"
+      register: installcheck
+      changed_when: false
+    - name: "install"
+      when: not installcheck.stat.exists
+      block:
+        - name: "[graphics-drivers]: adding PPA"
+          apt_repository:
+            repo: "ppa:graphics-drivers/ppa"
+            validate_certs: no
+        - name: "[graphics-drivers]: upgrading"
+          apt:
+            upgrade: "yes"
+            update_cache: yes
 
 - name: "keybase"
   when: '"keybase" is defined and "keybase" in install'
