@@ -1,6 +1,6 @@
 ---
 - block:
-  - name: 'Installing for Ubuntu 20.04 (focal)'
+  - name: 'Installing fabiodbr-ubuntu-customizations for Ubuntu 20.04 (focal)'
     assert:
       that:
       - ansible_distribution == 'Ubuntu'
@@ -124,7 +124,7 @@
   when: '"timedatectl" is defined and "timedatectl" in configure'
   block:
     - name: "[timedatectl]: Adjust dual boot clock"
-      command: "timedatectl set-local-rtc 1 --adjust-system-clock"
+      command: "timedatectl set-local-rtc 0 --adjust-system-clock"
       changed_when: false
 
 # Emoji with colors

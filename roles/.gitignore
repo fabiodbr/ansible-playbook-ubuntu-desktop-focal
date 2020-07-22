@@ -1,7 +1,7 @@
 # Ignore everything
-*
+/*
 # Except:
 !.gitignore
 !requirements.yml
-!/fabiodbr-customizations/**
-!/fabiodbr-softwares/**
+!/fabiodbr-customizations/
+!/fabiodbr-softwares/
