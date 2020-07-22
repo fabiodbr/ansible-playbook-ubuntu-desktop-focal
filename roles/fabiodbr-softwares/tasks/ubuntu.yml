@@ -357,8 +357,9 @@
             state: present
 
 - name: Menlo for Powerline for VScode
-  tags: fonts
   when: '"menlo-font" is defined and "menlo-font" in install'
+  become: yes
+  become_user: "{{ user }}"
   block:
     - name: "[menlo-font]: install check"
       stat:
@@ -367,6 +368,11 @@
     - name: "Install Menlo for Powerline"
       when: "not installcheck.stat.exists"
       block:
+        - name: "[menlo-font]: fonts folder"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts"
+            state: directory
+            recurse: yes
         - name: "[menlo-font]: cloning repository"
           git:
             repo: https://github.com/abertsch/Menlo-for-Powerline.git
@@ -394,6 +400,11 @@
     - name: "Install MesloLGS Font"
       when: "not installcheck.stat.exists"
       block:
+        - name: "[meslolgs-font]: fonts folder"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts"
+            state: directory
+            recurse: yes
         - name: "[meslolgs-font]: cloning repository"
           git:
             repo: https://github.com/romkatv/powerlevel10k-media.git
@@ -424,7 +435,7 @@
             msg: "Error installing MesloLGS NF Font"
 
 - name: nerdfonts
-  tags: shell, font
+  tags: fonts
   when: '"nerdfonts" is defined and "nerdfonts" in install'
   ignore_errors: yes
   become: yes
@@ -437,6 +448,11 @@
     - name: "nerdfonts: install"
       when: "not installcheck.stat.exists"
       block:
+        - name: "[nerdfonts]: fonts folder"
+          file:
+            path: "/home/{{ user }}/.local/share/fonts"
+            state: directory
+            recurse: yes
         - name: "[nerdfonts]: git clone"
           git:
             repo: https://github.com/ryanoasis/nerd-fonts.git
