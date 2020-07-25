@@ -3,3 +3,13 @@
   scm: git
   version: 2.2.0
   depth: 1
+
+- src: git+https://github.com/fabiodbr/ansible-role-software-customizations.git
+  scm: git
+  version: master
+  depth: 1
+
+- src: git+https://github.com/fabiodbr/ansible-role-desktop-softwares.git
+  scm: git
+  version: master
+  depth: 1

@@ -2,7 +2,7 @@
 - hosts: localhost
   connection: local
   roles:
-    - role: fabiodbr-softwares
+    - role: ansible-role-desktop-softwares
       become: yes
       vars:
         install:
@@ -30,7 +30,7 @@
           - visual-studio-code
           - vscode-extensions
 
-    - role: fabiodbr-customizations
+    - role: ansible-role-software-customizations
       become: yes
       vars:
         configure:
