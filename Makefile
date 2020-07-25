@@ -1,6 +1,8 @@
 .DEFAULT_GOAL := help
+SHELL := /bin/bash
 args = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
 REQUIRED_BINS = ansible ansible-galaxy python3 pip3
+
 ANSIBLE_PLAYBOOK_FILE = playbook.yml
 
 .PHONY: install
@@ -21,8 +23,13 @@ requirements: ## Install requirements: python3, pip3, ansible.
 	@sudo apt install -y python3 python3-pip
 	@sudo pip3 install ansible
 
+.PHONY: clean
 clean: ## Remove ansible-role dependencies.
-	rm -rf roles/ansible-role-visual-studio-code-extensions
+	rm -rf roles/*/
+
+.PHONY: test
+test: dependencies
+	@ansible-lint . || (echo "Test failed!" && exit 1)
 
 .PHONY: help
 help:
