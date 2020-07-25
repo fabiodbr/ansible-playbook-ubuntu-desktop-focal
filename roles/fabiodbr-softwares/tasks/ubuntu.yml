@@ -1,6 +1,6 @@
 ---
 - block:
-  - name: 'Installing for Ubuntu 20.04 (focal)'
+  - name: 'Verifying Ubuntu 20.04 (focal fossa)'
     assert:
       that:
       - ansible_distribution == 'Ubuntu'
@@ -69,22 +69,23 @@
         - vlc #video player
         - zsh #shell
 
+# inspiration: https://github.com/andrewrothstein/ansible-anaconda/blob/master/tasks/default.yml
 - name: anaconda
-  tags: programming, anaconda
   when: '"anaconda" is defined and "anaconda" in install'
   block:
-    - name: "Anaconda: install check"
+    - name: "[anaconda]: install check"
       stat:
-        path: /opt/anaconda3/bin
-      register: anaconda
+        path: "{{ anaconda_install_dir }}/bin/conda"
+      register: installcheck
     - name: "Install Anaconda"
-      when: not anaconda.stat.exists
+      when: not installcheck.stat.exists
       block:
-        - name: "Anaconda: prerequisites"
+        - name: "[anaconda]: dependencies"
           apt:
             name: "{{ item }}"
             update_cache: yes
             cache_valid_time: 3600
+            state: latest
           loop:
             - libgl1-mesa-glx
             - libegl1-mesa
@@ -95,28 +96,23 @@
             - libasound2
             - libxi6
             - libxtst6
-        - name: "Anaconda: download check"
-          stat:
-            path: "/tmp/Anaconda3-2019.10-Linux-x86_64.sh"
-            checksum_algorithm: md5
-          register: anaconda_downloaded
-        - name: "Anaconda: Download"
-          when: "not anaconda_downloaded.stat.exists or anaconda_downloaded.stat.md5 != anaconda_md5"
+        - name: "[anaconda]: downloading"
           get_url:
-            url: "{{ anaconda_url }}"
-            dest: "/tmp/{{ anaconda_md5 }}.sh"
-            checksum: "md5:{{ anaconda_md5 }}"
+            url: "{{ anaconda_installer_url }}"
+            dest: "{{ anaconda_installer_file }}"
+            checksum: "md5:{{ anaconda_installer_md5_value }}"
             mode: 0550
-        - name: "Anaconda: Install"
-          command: "bash /tmp/{{ anaconda_md5 }}.sh -b -p /opt/anaconda3"
+            force: yes
+        - name: "[anaconda]: installing"
+          command: "bash {{ anaconda_installer_file }} -b -p /opt/anaconda3"
         - name: "Anaconda: add /opt/anaconda3/bin to PATH"
           lineinfile:
             path: /etc/profile
             state: present
-            line: "PATH=$PATH:/opt/anaconda3/bin"
-        - name: "Anaconda: changing /opt/anaconda3 ownership to {{ user }}"
+            line: "PATH=$PATH:{{ anaconda_install_dir }}/bin"
+        - name: "[anaconda]: changing ownership of {{ anaconda_install_dir }} to {{ user }}"
           file:
-            path: /opt/anaconda3
+            path: anaconda_install_dir
             state: directory
             owner: "{{ user }}"
             group: "{{ user }}"

@@ -1,6 +1,8 @@
 ---
 # vars file for fabiodbr-gnome-env
 user: "{{ lookup('env','USER') }}"
-anaconda_url: "https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh"
-anaconda_md5: "b77a71c3712b45c8f33c7b2ecade366c"
+anaconda_install_dir: "/opt/anaconda3"
+anaconda_installer_file: "/tmp/anaconda-{{ ansible_date_time.epoch }}.sh"
+anaconda_installer_url: "https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh"
+anaconda_installer_md5_value: "1046c40a314ab2531e4c099741530ada"
 rstudio_version: "1.2.5033"

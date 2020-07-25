@@ -6,7 +6,7 @@
       become: yes
       vars:
         install:
-          # - anaconda
+          - anaconda
           - apt-packages
           # - bash-powerline-shell
           - google-chrome
