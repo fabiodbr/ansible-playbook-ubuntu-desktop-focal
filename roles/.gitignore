@@ -3,5 +3,5 @@
 # Except:
 !.gitignore
 !requirements.yml
-!/fabiodbr-customizations/
-!/fabiodbr-softwares/
+!/fabiodbr*/
+
