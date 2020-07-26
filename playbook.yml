@@ -14,7 +14,7 @@
           # - gimp
           - gnome-themes-github
           - gnome-theme-flat-remix
-            # - google-cloud-sdk
+          # - google-cloud-sdk
           - graphics-drivers
           - keybase
           - menlo-font
