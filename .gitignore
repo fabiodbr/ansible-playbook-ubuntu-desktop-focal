@@ -5,3 +5,6 @@
 
 ### Ansible ###
 *.retry
+
+### direnv ###
+.envrc
