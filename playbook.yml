@@ -16,10 +16,12 @@
           - gnome-theme-flat-remix
           # - google-cloud-sdk
           - graphics-drivers
+          - insomnia
           - keybase
           - menlo-font
           - meslolgs-font # vscode terminal font
           - nerdfonts
+          - obs-studio
           - paper-icon-theme
           - python3-packages
           # - R-base
