@@ -13,11 +13,12 @@
           - docker-ce
           # - gimp
           - gnome-themes-github
-          - gnome-theme-flat-remix
+          # - gnome-theme-flat-remix
           # - google-cloud-sdk
           - graphics-drivers
           - insomnia
           - keybase
+          - mcos-bigsur
           - menlo-font
           - meslolgs-font # vscode terminal font
           - nerdfonts
@@ -31,6 +32,7 @@
           # - virtualbox
           - visual-studio-code
           - vscode-extensions
+          - zafiro-icons
 
     - role: ansible-role-software-customizations
       become: yes
